@@ -1,59 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import {
-  getMyWork,
-  createWork,
-  updateWork,
-  deleteWork,
-  getWorkDescriptions,
-  createWorkDescription,
-  getWorkStatistics,
-} from '../../api/workAPI';
+import { getMyWork, getWorkStatistics } from '../../api/workAPI';
 
 /**
- * MyWork Component
- * Allows workers to view their work history and submit daily work entries
+ * MyWork Component (Worker - Read Only)
+ * Allows workers to view their work history
+ * Work entries are created by the Owner only
  * Follows international standards for date formatting (ISO 8601)
  */
 const MyWork = () => {
   const { user } = useAuth();
   const [works, setWorks] = useState([]);
-  const [descriptions, setDescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedWork, setSelectedWork] = useState(null);
   const [statistics, setStatistics] = useState(null);
   const [filterMonth, setFilterMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // Form state
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    quantity: '',
-    pricePerUnit: '',
-    description: '',
-    descriptionId: null,
-  });
-
-  // Description search/filter state
-  const [descriptionSearch, setDescriptionSearch] = useState('');
-  const [showDescriptionDropdown, setShowDescriptionDropdown] = useState(false);
-
-  // Fetch initial data
-  useEffect(() => {
-    fetchData();
-    fetchDescriptions();
-  }, []);
-
-  // Fetch data when month filter changes
+  // Fetch data when component mounts or month filter changes
   useEffect(() => {
     fetchData();
   }, [filterMonth]);
@@ -61,6 +27,7 @@ const MyWork = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError('');
       const [year, month] = filterMonth.split('-');
       const startDate = `${year}-${month}-01`;
       const endDate = new Date(parseInt(year), parseInt(month), 0)
@@ -74,160 +41,22 @@ const MyWork = () => {
 
       setWorks(workData || []);
       setStatistics(statsData);
-      setError('');
     } catch (err) {
-      setError(err.message || 'Failed to fetch work data');
+      const message = err.message || err.error || 'Failed to fetch work data';
+      setError(Array.isArray(message) ? message.join(', ') : message);
       setWorks([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchDescriptions = async () => {
-    try {
-      const data = await getWorkDescriptions();
-      setDescriptions(data || []);
-    } catch (err) {
-      console.error('Failed to fetch descriptions:', err);
-    }
-  };
-
-  // Filtered descriptions based on search
-  const filteredDescriptions = useMemo(() => {
-    if (!descriptionSearch.trim()) return descriptions;
-    const search = descriptionSearch.toLowerCase();
-    return descriptions.filter((d) => d.text.toLowerCase().includes(search));
-  }, [descriptions, descriptionSearch]);
-
-  const handleOpenModal = (work = null) => {
-    if (work) {
-      setIsEditing(true);
-      setSelectedWork(work);
-      setFormData({
-        date: work.date.split('T')[0],
-        quantity: work.quantity.toString(),
-        pricePerUnit: work.pricePerUnit.toString(),
-        description: work.description?.text || '',
-        descriptionId: work.descriptionId,
-      });
-      setDescriptionSearch(work.description?.text || '');
-    } else {
-      setIsEditing(false);
-      setSelectedWork(null);
-      setFormData({
-        date: new Date().toISOString().split('T')[0],
-        quantity: '',
-        pricePerUnit: '',
-        description: '',
-        descriptionId: null,
-      });
-      setDescriptionSearch('');
-    }
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      quantity: '',
-      pricePerUnit: '',
-      description: '',
-      descriptionId: null,
-    });
-    setDescriptionSearch('');
-    setShowDescriptionDropdown(false);
-  };
-
-  const handleDescriptionSelect = (desc) => {
-    setFormData({
-      ...formData,
-      description: desc.text,
-      descriptionId: desc.id,
-    });
-    setDescriptionSearch(desc.text);
-    setShowDescriptionDropdown(false);
-  };
-
-  const handleDescriptionChange = (e) => {
-    const value = e.target.value;
-    setDescriptionSearch(value);
-    setFormData({
-      ...formData,
-      description: value,
-      descriptionId: null, // Reset ID when typing new description
-    });
-    setShowDescriptionDropdown(true);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setSubmitting(true);
-
-    try {
-      const payload = {
-        date: formData.date,
-        quantity: parseInt(formData.quantity, 10),
-        pricePerUnit: parseFloat(formData.pricePerUnit),
-        description: formData.description,
-        descriptionId: formData.descriptionId,
-      };
-
-      // If new description, create it first
-      if (!formData.descriptionId && formData.description) {
-        try {
-          const newDesc = await createWorkDescription(formData.description);
-          payload.descriptionId = newDesc.id;
-          // Refresh descriptions list
-          fetchDescriptions();
-        } catch (descErr) {
-          // Description might already exist, continue
-          console.log('Description creation skipped:', descErr);
-        }
-      }
-
-      if (isEditing) {
-        await updateWork(selectedWork.id, payload);
-        setSuccess('Work entry updated successfully!');
-      } else {
-        await createWork(payload);
-        setSuccess('Work entry created successfully!');
-      }
-
-      handleCloseModal();
-      fetchData();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.message || 'Failed to save work entry');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (workId) => {
-    if (!window.confirm('Are you sure you want to delete this work entry?')) {
-      return;
-    }
-
-    try {
-      await deleteWork(workId);
-      setSuccess('Work entry deleted successfully!');
-      fetchData();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.message || 'Failed to delete work entry');
-    }
-  };
-
-  // Format currency following international standards
+  // Format currency following international standards (INR)
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   // Format date for display
@@ -236,97 +65,139 @@ const MyWork = () => {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      weekday: 'short',
     });
   };
 
-  const inputClasses =
-    'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const buttonClasses =
-    'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50';
+  // Get status badge color
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      PRESENT: 'bg-green-100 text-green-800',
+      ABSENT: 'bg-red-100 text-red-800',
+      HALF_DAY: 'bg-yellow-100 text-yellow-800',
+      LEAVE: 'bg-blue-100 text-blue-800',
+    };
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
+  };
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen">
-        <Navbar />
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-6 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading work data...</div>
-          </main>
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div className="text-xl text-gray-600">Loading your work data...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-          <div className="max-w-7xl mx-auto">
+    <div className="space-y-6">
+      <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">My Daily Work</h1>
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Work History</h1>
+                <p className="text-gray-600 mt-1">View your daily work entries</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">Filter by Month:</label>
                 <input
                   type="month"
                   value={filterMonth}
                   onChange={(e) => setFilterMonth(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <button onClick={() => handleOpenModal()} className={buttonClasses}>
-                  + Add Today's Work
-                </button>
               </div>
             </div>
 
-            {/* Messages */}
+            {/* Error Message */}
             {error && (
-              <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+              <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
                 {error}
-              </div>
-            )}
-            {success && (
-              <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-                {success}
               </div>
             )}
 
             {/* Statistics Cards */}
             {statistics && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Days Worked</h3>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {statistics.summary?.totalRecords || 0}
-                  </p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+                <div className="bg-white rounded-lg shadow p-4 md:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-gray-500 text-xs md:text-sm font-medium">Days Worked</h3>
+                      <p className="text-2xl md:text-3xl font-bold text-blue-600 mt-1">
+                        {statistics.summary?.totalRecords || 0}
+                      </p>
+                    </div>
+                    <div className="bg-blue-100 p-3 rounded-full">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Quantity</h3>
-                  <p className="text-3xl font-bold text-green-600">
-                    {statistics.summary?.totalQuantity || 0}
-                  </p>
+
+                <div className="bg-white rounded-lg shadow p-4 md:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-gray-500 text-xs md:text-sm font-medium">Total Units</h3>
+                      <p className="text-2xl md:text-3xl font-bold text-green-600 mt-1">
+                        {statistics.summary?.totalQuantity || 0}
+                      </p>
+                    </div>
+                    <div className="bg-green-100 p-3 rounded-full">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Earnings</h3>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {formatCurrency(statistics.summary?.totalEarnings || 0)}
-                  </p>
+
+                <div className="bg-white rounded-lg shadow p-4 md:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-gray-500 text-xs md:text-sm font-medium">Total Earnings</h3>
+                      <p className="text-xl md:text-2xl font-bold text-purple-600 mt-1">
+                        {formatCurrency(statistics.summary?.totalEarnings || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-purple-100 p-3 rounded-full">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Avg per Day</h3>
-                  <p className="text-3xl font-bold text-orange-600">
-                    {formatCurrency(statistics.summary?.averageEarning || 0)}
-                  </p>
+
+                <div className="bg-white rounded-lg shadow p-4 md:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-gray-500 text-xs md:text-sm font-medium">Avg/Day</h3>
+                      <p className="text-xl md:text-2xl font-bold text-orange-600 mt-1">
+                        {formatCurrency(statistics.summary?.averageEarning || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-orange-100 p-3 rounded-full">
+                      <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Work List */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                {works.length > 0 ? (
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Work Entries</h2>
+              </div>
+              
+              {works.length > 0 ? (
+                <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -340,7 +211,7 @@ const MyWork = () => {
                           Quantity
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Price/Unit
+                          Rate
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Total
@@ -348,21 +219,20 @@ const MyWork = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {works.map((work) => (
-                        <tr key={work.id} className="hover:bg-gray-50">
+                        <tr key={work.id} className="hover:bg-gray-50 transition">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {formatDate(work.date)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                            {work.description?.text || '-'}
+                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                            <span className="truncate block" title={work.description?.text}>
+                              {work.description?.text || '-'}
+                            </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                             {work.quantity}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -372,192 +242,44 @@ const MyWork = () => {
                             {formatCurrency(work.totalAmount)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                work.attendance?.status === 'PRESENT'
-                                  ? 'bg-green-100 text-green-800'
-                                  : work.attendance?.status === 'HALF_DAY'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {work.attendance?.status || 'N/A'}
+                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusBadge(work.attendance?.status)}`}>
+                              {work.attendance?.status?.replace('_', ' ') || 'N/A'}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() => handleOpenModal(work)}
-                              className="text-blue-600 hover:text-blue-800 mr-3"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(work.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No work entries for this month</p>
-                    <button
-                      onClick={() => handleOpenModal()}
-                      className="mt-4 text-blue-600 hover:text-blue-800"
-                    >
-                      Add your first work entry
-                    </button>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No work entries</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    No work entries found for {new Date(filterMonth + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Modal */}
-            {showModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                  <div className="p-6">
-                    <h2 className="text-2xl font-bold mb-6">
-                      {isEditing ? 'Edit Work Entry' : 'Add Daily Work'}
-                    </h2>
-                    <form onSubmit={handleSubmit}>
-                      {/* Date */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Date *
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.date}
-                          onChange={(e) =>
-                            setFormData({ ...formData, date: e.target.value })
-                          }
-                          className={inputClasses}
-                          required
-                          disabled={isEditing}
-                        />
-                      </div>
-
-                      {/* Description with Autocomplete */}
-                      <div className="mb-4 relative">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Work Description *
-                        </label>
-                        <input
-                          type="text"
-                          value={descriptionSearch}
-                          onChange={handleDescriptionChange}
-                          onFocus={() => setShowDescriptionDropdown(true)}
-                          placeholder="Type or select description..."
-                          className={inputClasses}
-                          required
-                        />
-                        {/* Dropdown */}
-                        {showDescriptionDropdown && filteredDescriptions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                            {filteredDescriptions.map((desc) => (
-                              <div
-                                key={desc.id}
-                                onClick={() => handleDescriptionSelect(desc)}
-                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center"
-                              >
-                                <span>{desc.text}</span>
-                                <span className="text-xs text-gray-400">
-                                  Used {desc._count?.works || 0} times
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <p className="mt-1 text-xs text-gray-500">
-                          Type a new description or select from existing ones
-                        </p>
-                      </div>
-
-                      {/* Quantity */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Quantity (Units) *
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={formData.quantity}
-                          onChange={(e) =>
-                            setFormData({ ...formData, quantity: e.target.value })
-                          }
-                          className={inputClasses}
-                          placeholder="Enter quantity"
-                          required
-                        />
-                      </div>
-
-                      {/* Price per Unit */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Price per Unit (₹) *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          value={formData.pricePerUnit}
-                          onChange={(e) =>
-                            setFormData({ ...formData, pricePerUnit: e.target.value })
-                          }
-                          className={inputClasses}
-                          placeholder="Enter price per unit"
-                          required
-                        />
-                      </div>
-
-                      {/* Total Preview */}
-                      {formData.quantity && formData.pricePerUnit && (
-                        <div className="mb-6 p-4 bg-green-50 rounded-lg">
-                          <p className="text-sm text-gray-600">Total Amount</p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {formatCurrency(
-                              parseFloat(formData.quantity || 0) *
-                                parseFloat(formData.pricePerUnit || 0)
-                            )}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Buttons */}
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={handleCloseModal}
-                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className={`flex-1 ${buttonClasses}`}
-                        >
-                          {submitting
-                            ? 'Saving...'
-                            : isEditing
-                            ? 'Update Entry'
-                            : 'Submit Work'}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+            {/* Info Note */}
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex">
+                <svg className="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">Information</h3>
+                  <p className="mt-1 text-sm text-blue-700">
+                    Work entries are managed by the administrator. If you have any questions about your work records, please contact your supervisor.
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   );
 };
 

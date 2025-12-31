@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import {
   getAttendanceByDate,
   getAttendanceSummary,
@@ -122,25 +120,15 @@ const Attendance = () => {
 
   if (loading && !attendanceData) {
     return (
-      <div className="flex flex-col h-screen">
-        <Navbar />
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-6 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading attendance data...</div>
-          </main>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-xl text-gray-600">Loading attendance data...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-          <div className="max-w-7xl mx-auto">
+    <div className="space-y-6">
+      <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <h1 className="text-3xl font-bold text-gray-900">Attendance Management</h1>
@@ -505,9 +493,7 @@ const Attendance = () => {
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   );
 };
 

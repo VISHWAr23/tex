@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { getMyWork, getWorkStatistics } from '../../api/workAPI';
 import { getAttendanceSummary } from '../../api/workAPI';
 
@@ -94,26 +92,16 @@ const MySalary = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen">
-        <Navbar />
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-6 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading salary data...</div>
-          </main>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-xl text-gray-600">Loading salary data...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6 text-gray-900">My Salary</h1>
+    <div className="space-y-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-gray-900">My Salary</h1>
 
             {error && (
               <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
@@ -286,9 +274,7 @@ const MySalary = () => {
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   );
 };
 

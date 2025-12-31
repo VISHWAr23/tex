@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { usersAPI } from '../../api/usersAPI';
 import { getAllWork, getWorkStatistics, getAttendanceByDate } from '../../api/workAPI';
 
@@ -76,191 +74,254 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen">
-        <Navbar />
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-6 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading dashboard...</div>
-          </main>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-500">{formatDate(new Date())}</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 mt-1">{formatDate(new Date())}</p>
+        </div>
+      </div>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Total Workers</p>
+              <p className="text-3xl font-bold mt-1">{stats.totalWorkers}</p>
             </div>
-            
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm">Total Workers</h3>
-                <p className="text-3xl font-bold text-blue-600">{stats.totalWorkers}</p>
-                <Link to="/admin/workers" className="text-xs text-blue-500 hover:underline">
-                  Manage Workers →
-                </Link>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm">Today's Attendance</h3>
-                <p className="text-3xl font-bold text-green-600">
-                  {stats.todayPresent} / {stats.totalWorkers}
-                </p>
-                <Link to="/admin/attendance" className="text-xs text-blue-500 hover:underline">
-                  View Attendance →
-                </Link>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm">Today's Payout</h3>
-                <p className="text-3xl font-bold text-purple-600">
-                  {formatCurrency(stats.todayEarnings)}
-                </p>
-                <Link to="/admin/daily-work" className="text-xs text-blue-500 hover:underline">
-                  View Details →
-                </Link>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm">Monthly Payout</h3>
-                <p className="text-3xl font-bold text-orange-600">
-                  {formatCurrency(stats.monthlyEarnings)}
-                </p>
-                <Link to="/admin/reports" className="text-xs text-blue-500 hover:underline">
-                  View Reports →
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Today's Work Summary */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold">Today's Work</h2>
-                  <Link to="/admin/daily-work" className="text-sm text-blue-600 hover:underline">
-                    View All
-                  </Link>
-                </div>
-                {todayWork.length > 0 ? (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {todayWork.slice(0, 5).map((work) => (
-                      <div key={work.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{work.user?.name}</p>
-                          <p className="text-sm text-gray-500">{work.description?.text}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-green-600">
-                            {formatCurrency(work.totalAmount)}
-                          </p>
-                          <p className="text-xs text-gray-400">Qty: {work.quantity}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {todayWork.length > 5 && (
-                      <p className="text-sm text-gray-500 text-center">
-                        +{todayWork.length - 5} more entries
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No work entries for today</p>
-                    <Link to="/admin/daily-work" className="text-blue-600 hover:underline text-sm">
-                      Add Work Entry
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Attendance Overview */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold">Today's Attendance</h2>
-                  <Link to="/admin/attendance" className="text-sm text-blue-600 hover:underline">
-                    Manage
-                  </Link>
-                </div>
-                {todayAttendance?.summary ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-3xl font-bold text-green-600">
-                        {todayAttendance.summary.present || 0}
-                      </p>
-                      <p className="text-sm text-gray-500">Present</p>
-                    </div>
-                    <div className="text-center p-4 bg-red-50 rounded-lg">
-                      <p className="text-3xl font-bold text-red-600">
-                        {todayAttendance.summary.absent || 0}
-                      </p>
-                      <p className="text-sm text-gray-500">Absent</p>
-                    </div>
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                      <p className="text-3xl font-bold text-yellow-600">
-                        {todayAttendance.summary.halfDay || 0}
-                      </p>
-                      <p className="text-sm text-gray-500">Half Day</p>
-                    </div>
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-3xl font-bold text-blue-600">
-                        {todayAttendance.summary.leave || 0}
-                      </p>
-                      <p className="text-sm text-gray-500">Leave</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No attendance data for today</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="mt-6 bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Link
-                  to="/admin/daily-work"
-                  className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition"
-                >
-                  <span className="text-2xl mb-2">📝</span>
-                  <span className="text-sm font-medium text-gray-700">Add Work Entry</span>
-                </Link>
-                <Link
-                  to="/admin/attendance"
-                  className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition"
-                >
-                  <span className="text-2xl mb-2">✅</span>
-                  <span className="text-sm font-medium text-gray-700">Mark Attendance</span>
-                </Link>
-                <Link
-                  to="/admin/workers"
-                  className="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition"
-                >
-                  <span className="text-2xl mb-2">👥</span>
-                  <span className="text-sm font-medium text-gray-700">Add Worker</span>
-                </Link>
-                <Link
-                  to="/admin/reports"
-                  className="flex flex-col items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition"
-                >
-                  <span className="text-2xl mb-2">📊</span>
-                  <span className="text-sm font-medium text-gray-700">View Reports</span>
-                </Link>
-              </div>
+            <div className="bg-white/20 rounded-lg p-3">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
             </div>
           </div>
-        </main>
+          <Link to="/admin/workers" className="inline-flex items-center gap-1 mt-3 text-sm text-blue-100 hover:text-white transition-colors">
+            Manage Workers
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+        
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-emerald-100 text-sm font-medium">Today's Attendance</p>
+              <p className="text-3xl font-bold mt-1">
+                {stats.todayPresent} / {stats.totalWorkers}
+              </p>
+            </div>
+            <div className="bg-white/20 rounded-lg p-3">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <Link to="/admin/attendance" className="inline-flex items-center gap-1 mt-3 text-sm text-emerald-100 hover:text-white transition-colors">
+            View Attendance
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+        
+        <div className="bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-violet-100 text-sm font-medium">Today's Payout</p>
+              <p className="text-3xl font-bold mt-1">{formatCurrency(stats.todayEarnings)}</p>
+            </div>
+            <div className="bg-white/20 rounded-lg p-3">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <Link to="/admin/daily-work" className="inline-flex items-center gap-1 mt-3 text-sm text-violet-100 hover:text-white transition-colors">
+            View Details
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+        
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-amber-100 text-sm font-medium">Monthly Payout</p>
+              <p className="text-3xl font-bold mt-1">{formatCurrency(stats.monthlyEarnings)}</p>
+            </div>
+            <div className="bg-white/20 rounded-lg p-3">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+          <Link to="/admin/reports" className="inline-flex items-center gap-1 mt-3 text-sm text-amber-100 hover:text-white transition-colors">
+            View Reports
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Today's Work Summary */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="flex justify-between items-center p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Today's Work</h2>
+            <Link to="/admin/daily-work" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+              View All
+            </Link>
+          </div>
+          <div className="p-5">
+            {todayWork.length > 0 ? (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {todayWork.slice(0, 5).map((work) => (
+                  <div key={work.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div>
+                      <p className="font-medium text-gray-900">{work.user?.name}</p>
+                      <p className="text-sm text-gray-500">{work.description?.text}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-emerald-600">
+                        {formatCurrency(work.totalAmount)}
+                      </p>
+                      <p className="text-xs text-gray-400">Qty: {work.quantity}</p>
+                    </div>
+                  </div>
+                ))}
+                {todayWork.length > 5 && (
+                  <p className="text-sm text-gray-500 text-center pt-2">
+                    +{todayWork.length - 5} more entries
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p className="text-gray-500">No work entries for today</p>
+                <Link to="/admin/daily-work" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mt-2 inline-block">
+                  Add Work Entry
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Attendance Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="flex justify-between items-center p-5 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Today's Attendance</h2>
+            <Link to="/admin/attendance" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+              Manage
+            </Link>
+          </div>
+          <div className="p-5">
+            {todayAttendance?.summary ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-emerald-50 rounded-xl">
+                  <p className="text-3xl font-bold text-emerald-600">
+                    {todayAttendance.summary.present || 0}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">Present</p>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-xl">
+                  <p className="text-3xl font-bold text-red-600">
+                    {todayAttendance.summary.absent || 0}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">Absent</p>
+                </div>
+                <div className="text-center p-4 bg-amber-50 rounded-xl">
+                  <p className="text-3xl font-bold text-amber-600">
+                    {todayAttendance.summary.halfDay || 0}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">Half Day</p>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-xl">
+                  <p className="text-3xl font-bold text-blue-600">
+                    {todayAttendance.summary.leave || 0}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">Leave</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-gray-500">No attendance data for today</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-5 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              to="/admin/daily-work"
+              className="flex flex-col items-center p-4 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-indigo-100 group-hover:bg-indigo-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">Add Work Entry</span>
+            </Link>
+            <Link
+              to="/admin/attendance"
+              className="flex flex-col items-center p-4 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-emerald-100 group-hover:bg-emerald-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">Mark Attendance</span>
+            </Link>
+            <Link
+              to="/admin/workers"
+              className="flex flex-col items-center p-4 bg-violet-50 rounded-xl hover:bg-violet-100 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-violet-100 group-hover:bg-violet-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">Add Worker</span>
+            </Link>
+            <Link
+              to="/admin/reports"
+              className="flex flex-col items-center p-4 bg-amber-50 rounded-xl hover:bg-amber-100 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-amber-100 group-hover:bg-amber-200 rounded-full flex items-center justify-center mb-3 transition-colors">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">View Reports</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

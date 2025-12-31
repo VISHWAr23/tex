@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { usersAPI } from '../../api/usersAPI';
 
 const Workers = () => {
@@ -132,25 +130,15 @@ const Workers = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen">
-        <Navbar />
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-6 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading users...</div>
-          </main>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-xl text-gray-600">Loading users...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-          <div className="max-w-7xl">
+    <div className="space-y-6">
+      <div className="max-w-7xl">
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
               <button onClick={() => handleOpenModal()} className={buttonClasses}>
@@ -235,10 +223,8 @@ const Workers = () => {
               ) : (
                 <div className="p-6 text-center text-gray-600">No users found</div>
               )}
-            </div>
           </div>
-        </main>
-      </div>
+        </div>
 
       {/* Modal for Create/Edit User */}
       {showModal && (

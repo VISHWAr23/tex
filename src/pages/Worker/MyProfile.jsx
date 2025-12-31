@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { usersAPI } from '../../api/usersAPI';
 
@@ -94,14 +92,8 @@ const MyProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen">
-        <Navbar />
-        <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-6 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading profile...</div>
-          </main>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-xl text-gray-600">Loading profile...</div>
       </div>
     );
   }
@@ -111,12 +103,8 @@ const MyProfile = () => {
   const cancelButtonClasses = "px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition";
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-          <h1 className="text-3xl font-bold mb-6">My Profile</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">My Profile</h1>
 
           {/* Messages */}
           {error && (
@@ -265,9 +253,7 @@ const MyProfile = () => {
               </form>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   );
 };
 
