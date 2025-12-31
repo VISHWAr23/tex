@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
-import { useAuth } from '../../context/AuthContext';
 import {
-  getMyWork,
+  getAllWork,
   createWork,
   updateWork,
   deleteWork,
@@ -11,15 +10,16 @@ import {
   createWorkDescription,
   getWorkStatistics,
 } from '../../api/workAPI';
+import { usersAPI } from '../../api/usersAPI';
 
 /**
- * MyWork Component
- * Allows workers to view their work history and submit daily work entries
+ * DailyWork Component (Admin)
+ * Allows admins to view, add, and manage all workers' daily work entries
  * Follows international standards for date formatting (ISO 8601)
  */
-const MyWork = () => {
-  const { user } = useAuth();
+const DailyWork = () => {
   const [works, setWorks] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [descriptions, setDescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -29,13 +29,19 @@ const MyWork = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedWork, setSelectedWork] = useState(null);
   const [statistics, setStatistics] = useState(null);
-  const [filterMonth, setFilterMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // Filters
+  const [filters, setFilters] = useState({
+    userId: '',
+    date: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
+    filterType: 'date', // 'date' or 'range'
   });
 
   // Form state
   const [formData, setFormData] = useState({
+    userId: '',
     date: new Date().toISOString().split('T')[0],
     quantity: '',
     pricePerUnit: '',
@@ -49,27 +55,52 @@ const MyWork = () => {
 
   // Fetch initial data
   useEffect(() => {
-    fetchData();
+    fetchWorkers();
     fetchDescriptions();
   }, []);
 
-  // Fetch data when month filter changes
+  // Fetch work data when filters change
   useEffect(() => {
     fetchData();
-  }, [filterMonth]);
+  }, [filters.userId, filters.date, filters.startDate, filters.endDate, filters.filterType]);
+
+  const fetchWorkers = async () => {
+    try {
+      const response = await usersAPI.getAllUsers();
+      const workersList = response.data.filter((u) => u.role === 'WORKER');
+      setWorkers(workersList);
+    } catch (err) {
+      console.error('Failed to fetch workers:', err);
+    }
+  };
+
+  const fetchDescriptions = async () => {
+    try {
+      const data = await getWorkDescriptions();
+      setDescriptions(data || []);
+    } catch (err) {
+      console.error('Failed to fetch descriptions:', err);
+    }
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [year, month] = filterMonth.split('-');
-      const startDate = `${year}-${month}-01`;
-      const endDate = new Date(parseInt(year), parseInt(month), 0)
-        .toISOString()
-        .split('T')[0];
+      let startDate, endDate;
+
+      if (filters.filterType === 'date') {
+        startDate = filters.date;
+        endDate = filters.date;
+      } else {
+        startDate = filters.startDate;
+        endDate = filters.endDate;
+      }
+
+      const userId = filters.userId || undefined;
 
       const [workData, statsData] = await Promise.all([
-        getMyWork(startDate, endDate),
-        getWorkStatistics(null, startDate, endDate),
+        getAllWork(userId, startDate, endDate),
+        getWorkStatistics(userId, startDate, endDate),
       ]);
 
       setWorks(workData || []);
@@ -80,15 +111,6 @@ const MyWork = () => {
       setWorks([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchDescriptions = async () => {
-    try {
-      const data = await getWorkDescriptions();
-      setDescriptions(data || []);
-    } catch (err) {
-      console.error('Failed to fetch descriptions:', err);
     }
   };
 
@@ -104,6 +126,7 @@ const MyWork = () => {
       setIsEditing(true);
       setSelectedWork(work);
       setFormData({
+        userId: work.userId.toString(),
         date: work.date.split('T')[0],
         quantity: work.quantity.toString(),
         pricePerUnit: work.pricePerUnit.toString(),
@@ -115,6 +138,7 @@ const MyWork = () => {
       setIsEditing(false);
       setSelectedWork(null);
       setFormData({
+        userId: '',
         date: new Date().toISOString().split('T')[0],
         quantity: '',
         pricePerUnit: '',
@@ -129,6 +153,7 @@ const MyWork = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setFormData({
+      userId: '',
       date: new Date().toISOString().split('T')[0],
       quantity: '',
       pricePerUnit: '',
@@ -155,7 +180,7 @@ const MyWork = () => {
     setFormData({
       ...formData,
       description: value,
-      descriptionId: null, // Reset ID when typing new description
+      descriptionId: null,
     });
     setShowDescriptionDropdown(true);
   };
@@ -180,10 +205,8 @@ const MyWork = () => {
         try {
           const newDesc = await createWorkDescription(formData.description);
           payload.descriptionId = newDesc.id;
-          // Refresh descriptions list
           fetchDescriptions();
         } catch (descErr) {
-          // Description might already exist, continue
           console.log('Description creation skipped:', descErr);
         }
       }
@@ -192,7 +215,9 @@ const MyWork = () => {
         await updateWork(selectedWork.id, payload);
         setSuccess('Work entry updated successfully!');
       } else {
-        await createWork(payload);
+        // For admin creating work for a user, we need to handle this differently
+        // The backend should support admin creating work for any user
+        await createWork({ ...payload, userId: parseInt(formData.userId, 10) });
         setSuccess('Work entry created successfully!');
       }
 
@@ -221,7 +246,7 @@ const MyWork = () => {
     }
   };
 
-  // Format currency following international standards
+  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -230,7 +255,7 @@ const MyWork = () => {
     }).format(amount);
   };
 
-  // Format date for display
+  // Format date
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
       year: 'numeric',
@@ -244,7 +269,7 @@ const MyWork = () => {
   const buttonClasses =
     'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50';
 
-  if (loading) {
+  if (loading && works.length === 0) {
     return (
       <div className="flex flex-col h-screen">
         <Navbar />
@@ -266,19 +291,11 @@ const MyWork = () => {
         <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">My Daily Work</h1>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="month"
-                  value={filterMonth}
-                  onChange={(e) => setFilterMonth(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button onClick={() => handleOpenModal()} className={buttonClasses}>
-                  + Add Today's Work
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <h1 className="text-3xl font-bold text-gray-900">Daily Work Management</h1>
+              <button onClick={() => handleOpenModal()} className={buttonClasses}>
+                + Add Work Entry
+              </button>
             </div>
 
             {/* Messages */}
@@ -293,11 +310,97 @@ const MyWork = () => {
               </div>
             )}
 
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow p-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Filter Type
+                  </label>
+                  <select
+                    value={filters.filterType}
+                    onChange={(e) =>
+                      setFilters({ ...filters, filterType: e.target.value })
+                    }
+                    className={inputClasses}
+                  >
+                    <option value="date">Single Date</option>
+                    <option value="range">Date Range</option>
+                  </select>
+                </div>
+
+                {filters.filterType === 'date' ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={filters.date}
+                      onChange={(e) =>
+                        setFilters({ ...filters, date: e.target.value })
+                      }
+                      className={inputClasses}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={filters.startDate}
+                        onChange={(e) =>
+                          setFilters({ ...filters, startDate: e.target.value })
+                        }
+                        className={inputClasses}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={filters.endDate}
+                        onChange={(e) =>
+                          setFilters({ ...filters, endDate: e.target.value })
+                        }
+                        className={inputClasses}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Worker
+                  </label>
+                  <select
+                    value={filters.userId}
+                    onChange={(e) =>
+                      setFilters({ ...filters, userId: e.target.value })
+                    }
+                    className={inputClasses}
+                  >
+                    <option value="">All Workers</option>
+                    {workers.map((worker) => (
+                      <option key={worker.id} value={worker.id}>
+                        {worker.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
             {/* Statistics Cards */}
             {statistics && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Days Worked</h3>
+                  <h3 className="text-gray-600 text-sm font-semibold">Total Entries</h3>
                   <p className="text-3xl font-bold text-blue-600">
                     {statistics.summary?.totalRecords || 0}
                   </p>
@@ -309,13 +412,13 @@ const MyWork = () => {
                   </p>
                 </div>
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Earnings</h3>
+                  <h3 className="text-gray-600 text-sm font-semibold">Total Payout</h3>
                   <p className="text-3xl font-bold text-purple-600">
                     {formatCurrency(statistics.summary?.totalEarnings || 0)}
                   </p>
                 </div>
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Avg per Day</h3>
+                  <h3 className="text-gray-600 text-sm font-semibold">Avg per Entry</h3>
                   <p className="text-3xl font-bold text-orange-600">
                     {formatCurrency(statistics.summary?.averageEarning || 0)}
                   </p>
@@ -334,6 +437,9 @@ const MyWork = () => {
                           Date
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Worker
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Description
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -346,7 +452,7 @@ const MyWork = () => {
                           Total
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
+                          Attendance
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Actions
@@ -358,6 +464,9 @@ const MyWork = () => {
                         <tr key={work.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {formatDate(work.date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {work.user?.name || '-'}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                             {work.description?.text || '-'}
@@ -378,7 +487,9 @@ const MyWork = () => {
                                   ? 'bg-green-100 text-green-800'
                                   : work.attendance?.status === 'HALF_DAY'
                                   ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-gray-100 text-gray-800'
+                                  : work.attendance?.status === 'LEAVE'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-red-100 text-red-800'
                               }`}
                             >
                               {work.attendance?.status || 'N/A'}
@@ -404,13 +515,10 @@ const MyWork = () => {
                   </table>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No work entries for this month</p>
-                    <button
-                      onClick={() => handleOpenModal()}
-                      className="mt-4 text-blue-600 hover:text-blue-800"
-                    >
-                      Add your first work entry
-                    </button>
+                    <p className="text-gray-500 text-lg">No work entries found</p>
+                    <p className="text-gray-400 text-sm mt-2">
+                      Try changing the filters or add a new entry
+                    </p>
                   </div>
                 )}
               </div>
@@ -422,9 +530,33 @@ const MyWork = () => {
                 <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                   <div className="p-6">
                     <h2 className="text-2xl font-bold mb-6">
-                      {isEditing ? 'Edit Work Entry' : 'Add Daily Work'}
+                      {isEditing ? 'Edit Work Entry' : 'Add Work Entry'}
                     </h2>
                     <form onSubmit={handleSubmit}>
+                      {/* Worker Selection */}
+                      {!isEditing && (
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Worker *
+                          </label>
+                          <select
+                            value={formData.userId}
+                            onChange={(e) =>
+                              setFormData({ ...formData, userId: e.target.value })
+                            }
+                            className={inputClasses}
+                            required
+                          >
+                            <option value="">Select Worker</option>
+                            {workers.map((worker) => (
+                              <option key={worker.id} value={worker.id}>
+                                {worker.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
                       {/* Date */}
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -456,7 +588,6 @@ const MyWork = () => {
                           className={inputClasses}
                           required
                         />
-                        {/* Dropdown */}
                         {showDescriptionDropdown && filteredDescriptions.length > 0 && (
                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                             {filteredDescriptions.map((desc) => (
@@ -474,7 +605,7 @@ const MyWork = () => {
                           </div>
                         )}
                         <p className="mt-1 text-xs text-gray-500">
-                          Type a new description or select from existing ones
+                          Type new or select existing description
                         </p>
                       </div>
 
@@ -546,7 +677,7 @@ const MyWork = () => {
                             ? 'Saving...'
                             : isEditing
                             ? 'Update Entry'
-                            : 'Submit Work'}
+                            : 'Create Entry'}
                         </button>
                       </div>
                     </form>
@@ -561,4 +692,4 @@ const MyWork = () => {
   );
 };
 
-export default MyWork;
+export default DailyWork;

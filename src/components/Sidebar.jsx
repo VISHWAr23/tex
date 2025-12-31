@@ -6,6 +6,8 @@ const Sidebar = () => {
 
   const adminLinks = [
     { path: '/admin/dashboard', label: 'Dashboard' },
+    { path: '/admin/daily-work', label: 'Daily Work' },
+    { path: '/admin/attendance', label: 'Attendance' },
     { path: '/admin/workers', label: 'Workers' },
     { path: '/admin/materials', label: 'Materials' },
     { path: '/admin/finance', label: 'Finance' },

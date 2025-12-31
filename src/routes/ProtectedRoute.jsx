@@ -16,7 +16,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  // Normalize role comparison (handle both uppercase and lowercase)
+  const userRole = user.role?.toLowerCase();
+  const normalizedAllowedRoles = allowedRoles?.map(r => r.toLowerCase());
+  
+  if (normalizedAllowedRoles && !normalizedAllowedRoles.includes(userRole)) {
+    // Redirect to appropriate dashboard based on role
+    if (userRole === 'owner' || userRole === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (userRole === 'worker') {
+      return <Navigate to="/worker/my-work" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 

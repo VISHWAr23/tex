@@ -31,13 +31,16 @@ export const AuthProvider = ({ children }) => {
     // Do NOT navigate here; let the caller (Navbar or others) navigate.
   };
 
+  // Normalize role checks to handle both uppercase and lowercase
+  const normalizedRole = user?.role?.toLowerCase();
+
   const value = {
     user,
     login,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isWorker: user?.role === 'worker',
+    isAdmin: normalizedRole === 'admin' || normalizedRole === 'owner',
+    isWorker: normalizedRole === 'worker',
     loading,
   };
 
