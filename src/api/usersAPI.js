@@ -58,4 +58,36 @@ export const usersAPI = {
   deleteUser: (id) => {
     return axiosInstance.delete(`${API_BASE}/${id}`);
   },
+
+  /**
+   * Get worker details with salary information
+   */
+  getWorkerDetails: (id, month = null) => {
+    const params = month ? { month } : {};
+    return axiosInstance.get(`${API_BASE}/${id}/details`, { params });
+  },
+
+  /**
+   * Create salary payment for a worker
+   */
+  createSalaryPayment: (userId, paymentData) => {
+    return axiosInstance.post(`${API_BASE}/${userId}/salary-payments`, paymentData);
+  },
+
+  /**
+   * Get salary payments for a worker
+   */
+  getSalaryPayments: (userId, startDate = null, endDate = null) => {
+    const params = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    return axiosInstance.get(`${API_BASE}/${userId}/salary-payments`, { params });
+  },
+
+  /**
+   * Delete salary payment
+   */
+  deleteSalaryPayment: (paymentId) => {
+    return axiosInstance.delete(`${API_BASE}/salary-payments/${paymentId}`);
+  },
 };

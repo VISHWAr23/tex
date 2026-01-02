@@ -21,11 +21,12 @@ export const createCompanyExpense = async (data) => {
  */
 export const getCompanyExpenses = async (startDate, endDate, category) => {
   const params = new URLSearchParams();
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
-  if (category) params.append('category', category);
+  if (startDate && startDate.trim()) params.append('startDate', startDate);
+  if (endDate && endDate.trim()) params.append('endDate', endDate);
+  if (category && category.trim()) params.append('category', category);
 
-  const response = await axiosInstance.get(`/finance/company?${params}`);
+  const queryString = params.toString();
+  const response = await axiosInstance.get(`/finance/company${queryString ? '?' + queryString : ''}`);
   return response.data;
 };
 
@@ -34,10 +35,11 @@ export const getCompanyExpenses = async (startDate, endDate, category) => {
  */
 export const getCompanyStatistics = async (startDate, endDate) => {
   const params = new URLSearchParams();
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
+  if (startDate && startDate.trim()) params.append('startDate', startDate);
+  if (endDate && endDate.trim()) params.append('endDate', endDate);
 
-  const response = await axiosInstance.get(`/finance/company/statistics?${params}`);
+  const queryString = params.toString();
+  const response = await axiosInstance.get(`/finance/company/statistics${queryString ? '?' + queryString : ''}`);
   return response.data;
 };
 
@@ -64,11 +66,12 @@ export const createHomeExpense = async (data) => {
  */
 export const getHomeExpenses = async (startDate, endDate, category) => {
   const params = new URLSearchParams();
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
-  if (category) params.append('category', category);
+  if (startDate && startDate.trim()) params.append('startDate', startDate);
+  if (endDate && endDate.trim()) params.append('endDate', endDate);
+  if (category && category.trim()) params.append('category', category);
 
-  const response = await axiosInstance.get(`/finance/home?${params}`);
+  const queryString = params.toString();
+  const response = await axiosInstance.get(`/finance/home${queryString ? '?' + queryString : ''}`);
   return response.data;
 };
 
@@ -77,10 +80,11 @@ export const getHomeExpenses = async (startDate, endDate, category) => {
  */
 export const getHomeStatistics = async (startDate, endDate) => {
   const params = new URLSearchParams();
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
+  if (startDate && startDate.trim()) params.append('startDate', startDate);
+  if (endDate && endDate.trim()) params.append('endDate', endDate);
 
-  const response = await axiosInstance.get(`/finance/home/statistics?${params}`);
+  const queryString = params.toString();
+  const response = await axiosInstance.get(`/finance/home/statistics${queryString ? '?' + queryString : ''}`);
   return response.data;
 };
 

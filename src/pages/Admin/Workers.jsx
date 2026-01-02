@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usersAPI } from '../../api/usersAPI';
 
 const Workers = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -17,6 +19,7 @@ const Workers = () => {
     email: '',
     password: '',
     role: 'WORKER',
+    monthlySalary: '',
   });
 
   // Fetch users on component mount
@@ -58,6 +61,7 @@ const Workers = () => {
         email: user.email,
         password: '',
         role: user.role,
+        monthlySalary: user.monthlySalary || '',
       });
     } else {
       setIsEditing(false);
@@ -67,6 +71,7 @@ const Workers = () => {
         email: '',
         password: '',
         role: 'WORKER',
+        monthlySalary: '',
       });
     }
     setShowModal(true);
@@ -74,7 +79,7 @@ const Workers = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setFormData({ name: '', email: '', password: '', role: 'WORKER' });
+    setFormData({ name: '', email: '', password: '', role: 'WORKER', monthlySalary: '' });
   };
 
   const handleSubmit = async (e) => {
@@ -84,8 +89,12 @@ const Workers = () => {
 
     try {
       if (isEditing) {
-        // Update user
-        const updateData = { name: formData.name, email: formData.email, role: formData.role };
+        const updateData = {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : null,
+        };
         await usersAPI.updateUser(selectedUser.id, updateData);
         setSuccessMsg('User updated successfully');
       } else {
@@ -94,7 +103,14 @@ const Workers = () => {
           setError('Password is required for new users');
           return;
         }
-        await usersAPI.createUser(formData);
+        const createData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : null,
+        };
+        await usersAPI.createUser(createData);
         setSuccessMsg('User created successfully');
       }
       handleCloseModal();
@@ -189,7 +205,11 @@ const Workers = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={user.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => navigate(`/workers/${user.id}`)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -202,7 +222,7 @@ const Workers = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {new Date(user.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2 flex">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2 flex" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleOpenModal(user)}
                             className={editButtonClasses}
@@ -280,6 +300,21 @@ const Workers = () => {
                   <option value="WORKER">Worker</option>
                   <option value="OWNER">Owner</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Monthly Salary (Optional)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.monthlySalary}
+                  onChange={(e) => setFormData({ ...formData, monthlySalary: e.target.value })}
+                  className={inputClasses}
+                  placeholder="Enter monthly salary"
+                />
               </div>
 
               <div className="flex gap-4 pt-4">

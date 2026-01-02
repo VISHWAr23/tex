@@ -9,11 +9,13 @@ import Login from './pages/Auth/Login';
 // Admin Pages
 import Dashboard from './pages/Admin/Dashboard';
 import Workers from './pages/Admin/Workers';
+import WorkerDetail from './pages/Admin/WorkerDetail';
 import Finance from './pages/Admin/Finance';
 import HomeExpenses from './pages/Admin/HomeExpenses';
 import Reports from './pages/Admin/Reports';
 import DailyWork from './pages/Admin/DailyWork';
 import Attendance from './pages/Admin/Attendance';
+import Exports from './pages/Admin/Exports';
 
 // Worker Pages
 import MyProfile from './pages/Worker/MyProfile';
@@ -51,6 +53,10 @@ function App() {
         <Route path="/admin/daily-work" element={<DailyWork />} />
         <Route path="/admin/attendance" element={<Attendance />} />
         <Route path="/admin/workers" element={<Workers />} />
+        <Route path="/admin/workers/:id" element={<WorkerDetail />} />
+        <Route path="/workers" element={<Workers />} />
+        <Route path="/workers/:id" element={<WorkerDetail />} />
+        <Route path="/admin/exports" element={<Exports />} />
         <Route path="/admin/finance" element={<Finance />} />
         <Route path="/admin/home-expenses" element={<HomeExpenses />} />
         <Route path="/admin/reports" element={<Reports />} />
