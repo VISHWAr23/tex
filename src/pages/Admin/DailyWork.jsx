@@ -167,6 +167,7 @@ const DailyWork = () => {
       ...formData,
       description: desc.text,
       descriptionId: desc.id,
+      pricePerUnit: desc.pricePerUnit || formData.pricePerUnit,
     });
     setDescriptionSearch(desc.text);
     setShowDescriptionDropdown(false);
@@ -279,9 +280,9 @@ const DailyWork = () => {
     <div className="space-y-6">
       <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">Daily Work Management</h1>
-              <button onClick={() => handleOpenModal()} className={buttonClasses}>
+            <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 xs:gap-4 mb-6">
+              <h1 className="text-2xl xs:text-3xl font-bold text-gray-900">Daily Work Management</h1>
+              <button onClick={() => handleOpenModal()} className={buttonClasses + ' whitespace-nowrap text-sm xs:text-base'}>
                 + Add Work Entry
               </button>
             </div>
@@ -299,10 +300,10 @@ const DailyWork = () => {
             )}
 
             {/* Filters */}
-            <div className="bg-white rounded-lg shadow p-4 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="bg-white rounded-lg shadow p-3 xs:p-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-4">
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                     Filter Type
                   </label>
                   <select
@@ -318,8 +319,8 @@ const DailyWork = () => {
                 </div>
 
                 {filters.filterType === 'date' ? (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="sm:col-span-2 lg:col-span-1">
+                    <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                       Date
                     </label>
                     <input
@@ -333,8 +334,8 @@ const DailyWork = () => {
                   </div>
                 ) : (
                   <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="sm:col-span-1 lg:col-span-1">
+                      <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                         Start Date
                       </label>
                       <input
@@ -346,8 +347,8 @@ const DailyWork = () => {
                         className={inputClasses}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="sm:col-span-1 lg:col-span-1">
+                      <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                         End Date
                       </label>
                       <input
@@ -362,8 +363,8 @@ const DailyWork = () => {
                   </>
                 )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                     Worker
                   </label>
                   <select
@@ -416,9 +417,9 @@ const DailyWork = () => {
 
             {/* Work List */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto -mx-4 xs:mx-0">
                 {works.length > 0 ? (
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200 text-xs xs:text-sm">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -450,25 +451,25 @@ const DailyWork = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {works.map((work) => (
                         <tr key={work.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
                             {formatDate(work.date)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
                             {work.user?.name || '-'}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 text-gray-900 max-w-xs truncate">
                             {work.description?.text || '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
                             {work.quantity}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
                             {formatCurrency(work.pricePerUnit)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-semibold text-green-600">
                             {formatCurrency(work.totalAmount)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap">
                             <span
                               className={`px-2 py-1 text-xs rounded-full ${
                                 work.attendance?.status === 'PRESENT'
@@ -483,10 +484,10 @@ const DailyWork = () => {
                               {work.attendance?.status || 'N/A'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-xs xs:text-sm space-x-1 xs:space-x-2">
                             <button
                               onClick={() => handleOpenModal(work)}
-                              className="text-blue-600 hover:text-blue-800 mr-3"
+                              className="text-blue-600 hover:text-blue-800"
                             >
                               Edit
                             </button>
@@ -515,16 +516,16 @@ const DailyWork = () => {
             {/* Modal */}
             {showModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                  <div className="p-6">
-                    <h2 className="text-2xl font-bold mb-6">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[95vh] xs:max-h-[90vh] overflow-y-auto">
+                  <div className="p-4 xs:p-6">
+                    <h2 className="text-xl xs:text-2xl font-bold mb-4 xs:mb-6">
                       {isEditing ? 'Edit Work Entry' : 'Add Work Entry'}
                     </h2>
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-4">
                       {/* Worker Selection */}
                       {!isEditing && (
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="mb-3 xs:mb-4">
+                          <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                             Worker *
                           </label>
                           <select
@@ -546,8 +547,8 @@ const DailyWork = () => {
                       )}
 
                       {/* Date */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="mb-3 xs:mb-4">
+                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                           Date *
                         </label>
                         <input
@@ -563,8 +564,8 @@ const DailyWork = () => {
                       </div>
 
                       {/* Description with Autocomplete */}
-                      <div className="mb-4 relative">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="mb-3 xs:mb-4 relative">
+                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                           Work Description *
                         </label>
                         <input
@@ -582,7 +583,7 @@ const DailyWork = () => {
                               <div
                                 key={desc.id}
                                 onClick={() => handleDescriptionSelect(desc)}
-                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center"
+                                className="px-3 xs:px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center text-xs xs:text-sm"
                               >
                                 <span>{desc.text}</span>
                                 <span className="text-xs text-gray-400">
@@ -598,8 +599,8 @@ const DailyWork = () => {
                       </div>
 
                       {/* Quantity */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="mb-3 xs:mb-4">
+                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                           Quantity (Units) *
                         </label>
                         <input
@@ -616,8 +617,8 @@ const DailyWork = () => {
                       </div>
 
                       {/* Price per Unit */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="mb-3 xs:mb-4">
+                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                           Price per Unit (₹) *
                         </label>
                         <input
@@ -636,9 +637,9 @@ const DailyWork = () => {
 
                       {/* Total Preview */}
                       {formData.quantity && formData.pricePerUnit && (
-                        <div className="mb-6 p-4 bg-green-50 rounded-lg">
-                          <p className="text-sm text-gray-600">Total Amount</p>
-                          <p className="text-2xl font-bold text-green-600">
+                        <div className="mb-4 xs:mb-6 p-3 xs:p-4 bg-green-50 rounded-lg">
+                          <p className="text-xs xs:text-sm text-gray-600">Total Amount</p>
+                          <p className="text-xl xs:text-2xl font-bold text-green-600">
                             {formatCurrency(
                               parseFloat(formData.quantity || 0) *
                                 parseFloat(formData.pricePerUnit || 0)
@@ -648,18 +649,18 @@ const DailyWork = () => {
                       )}
 
                       {/* Buttons */}
-                      <div className="flex gap-3">
+                      <div className="flex gap-2 xs:gap-3 pt-3 xs:pt-4">
                         <button
                           type="button"
                           onClick={handleCloseModal}
-                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition text-xs xs:text-base"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
                           disabled={submitting}
-                          className={`flex-1 ${buttonClasses}`}
+                          className={`flex-1 ${buttonClasses} text-xs xs:text-base`}
                         >
                           {submitting
                             ? 'Saving...'

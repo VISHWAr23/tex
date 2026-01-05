@@ -275,9 +275,9 @@ const Exports = () => {
     <div className="space-y-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Export Management</h1>
-          <button onClick={() => handleOpenModal()} className={buttonClasses}>
+        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 xs:gap-4 mb-6">
+          <h1 className="text-2xl xs:text-3xl font-bold text-gray-900">Export Management</h1>
+          <button onClick={() => handleOpenModal()} className={buttonClasses + ' whitespace-nowrap text-sm xs:text-base'}>
             + Add Export Entry
           </button>
         </div>
@@ -316,10 +316,10 @@ const Exports = () => {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="bg-white rounded-lg shadow p-3 xs:p-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-4">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                 Filter Type
               </label>
               <select
@@ -335,8 +335,8 @@ const Exports = () => {
             </div>
 
             {filters.filterType === 'date' ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="sm:col-span-2 lg:col-span-1">
+                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                   Date
                 </label>
                 <input
@@ -350,8 +350,8 @@ const Exports = () => {
               </div>
             ) : (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="sm:col-span-1 lg:col-span-1">
+                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                     Start Date
                   </label>
                   <input
@@ -363,8 +363,8 @@ const Exports = () => {
                     className={inputClasses}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="sm:col-span-1 lg:col-span-1">
+                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                     End Date
                   </label>
                   <input
@@ -379,8 +379,8 @@ const Exports = () => {
               </>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
                 Company
               </label>
               <input
@@ -405,8 +405,8 @@ const Exports = () => {
         {/* Export Records Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {exports.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="overflow-x-auto -mx-4 xs:mx-0">
+              <table className="min-w-full divide-y divide-gray-200 text-xs xs:text-sm">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -435,34 +435,34 @@ const Exports = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {exports.map((exportItem) => (
                     <tr key={exportItem.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
                         {formatDate(exportItem.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-medium text-gray-900">
                         {exportItem.company?.name}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 text-gray-600 max-w-xs truncate">
                         {exportItem.description?.text}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-600">
                         {exportItem.quantity.toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-600">
                         {formatCurrency(exportItem.pricePerUnit)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-medium text-blue-600">
                         {formatCurrency(exportItem.totalAmount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap space-x-1 xs:space-x-2">
                         <button
                           onClick={() => handleOpenModal(exportItem)}
-                          className="text-amber-600 hover:text-amber-800 font-medium"
+                          className="text-amber-600 hover:text-amber-800 font-medium text-xs xs:text-sm"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(exportItem.id)}
-                          className="text-red-600 hover:text-red-800 font-medium"
+                          className="text-red-600 hover:text-red-800 font-medium text-xs xs:text-sm"
                         >
                           Delete
                         </button>
@@ -482,37 +482,36 @@ const Exports = () => {
 
       {/* Modal for Create/Edit Export */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-4 xs:p-6 max-w-md w-full max-h-[95vh] xs:max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl xs:text-2xl font-bold mb-4 xs:mb-6">
               {isEditing ? 'Edit Export Entry' : 'Add Export Entry'}
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                   Company Name *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.companyName}
                   onChange={(e) =>
                     setFormData({ ...formData, companyName: e.target.value })
                   }
                   className={inputClasses}
-                  placeholder="Enter company/client name"
                   required
-                  list="company-list"
-                />
-                <datalist id="company-list">
+                >
+                  <option value="">Select a company</option>
                   {companies.map((company, idx) => (
-                    <option key={idx} value={company} />
+                    <option key={idx} value={company}>
+                      {company}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                   Date *
                 </label>
                 <input
@@ -527,7 +526,7 @@ const Exports = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                   Description *
                 </label>
                 <div className="relative">
@@ -546,7 +545,7 @@ const Exports = () => {
                         <div
                           key={desc.id}
                           onClick={() => handleDescriptionSelect(desc)}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                          className="px-3 xs:px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center text-xs xs:text-sm"
                         >
                           <span>{desc.text}</span>
                           {desc.pricePerUnit && (
@@ -562,7 +561,7 @@ const Exports = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                   Quantity *
                 </label>
                 <input
@@ -580,7 +579,7 @@ const Exports = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
                   Price Per Unit *
                 </label>
                 <input
@@ -596,7 +595,7 @@ const Exports = () => {
                   required
                 />
                 <div className="mt-2">
-                  <label className="flex items-center text-sm text-gray-700 cursor-pointer">
+                  <label className="flex items-center text-xs xs:text-sm text-gray-700 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.updateDescriptionPrice}
@@ -611,8 +610,8 @@ const Exports = () => {
               </div>
 
               {formData.quantity && formData.pricePerUnit && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-700">
+                <div className="bg-blue-50 p-3 xs:p-4 rounded-lg">
+                  <p className="text-xs xs:text-sm text-gray-700">
                     Total Amount:{' '}
                     <span className="font-bold text-blue-600">
                       {formatCurrency(
@@ -623,10 +622,10 @@ const Exports = () => {
                 </div>
               )}
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-2 xs:gap-4 pt-3 xs:pt-4">
                 <button
                   type="submit"
-                  className={buttonClasses + ' flex-1'}
+                  className={buttonClasses + ' flex-1 text-xs xs:text-base'}
                   disabled={submitting}
                 >
                   {submitting
@@ -638,7 +637,7 @@ const Exports = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition"
+                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition text-xs xs:text-base"
                 >
                   Cancel
                 </button>
