@@ -45,6 +45,7 @@ const DailyWork = () => {
     pricePerUnit: '',
     description: '',
     descriptionId: null,
+    updateDescriptionPrice: false, // Save price to description
   });
 
   // Description search/filter state
@@ -130,6 +131,7 @@ const DailyWork = () => {
         pricePerUnit: work.pricePerUnit.toString(),
         description: work.description?.text || '',
         descriptionId: work.descriptionId,
+        updateDescriptionPrice: false,
       });
       setDescriptionSearch(work.description?.text || '');
     } else {
@@ -157,18 +159,22 @@ const DailyWork = () => {
       pricePerUnit: '',
       description: '',
       descriptionId: null,
+      updateDescriptionPrice: false,
     });
     setDescriptionSearch('');
     setShowDescriptionDropdown(false);
   };
 
   const handleDescriptionSelect = (desc) => {
+    console.log('Selected description:', desc);
     setFormData({
       ...formData,
       description: desc.text,
       descriptionId: desc.id,
-      pricePerUnit: desc.pricePerUnit || formData.pricePerUnit,
+      // Auto-fill price per unit if description has a saved price
+      pricePerUnit: desc.pricePerUnit ? desc.pricePerUnit.toString() : formData.pricePerUnit,
     });
+    console.log('Updated pricePerUnit:', desc.pricePerUnit ? desc.pricePerUnit.toString() : formData.pricePerUnit);
     setDescriptionSearch(desc.text);
     setShowDescriptionDropdown(false);
   };
@@ -197,12 +203,16 @@ const DailyWork = () => {
         pricePerUnit: parseFloat(formData.pricePerUnit),
         description: formData.description,
         descriptionId: formData.descriptionId,
+        updateDescriptionPrice: formData.updateDescriptionPrice,
       };
 
       // If new description, create it first
       if (!formData.descriptionId && formData.description) {
         try {
-          const newDesc = await createWorkDescription(formData.description);
+          const newDesc = await createWorkDescription(
+            formData.description,
+            formData.pricePerUnit // Pass the price per unit
+          );
           payload.descriptionId = newDesc.id;
           fetchDescriptions();
         } catch (descErr) {
@@ -578,23 +588,37 @@ const DailyWork = () => {
                           required
                         />
                         {showDescriptionDropdown && filteredDescriptions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                            {filteredDescriptions.map((desc) => (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {filteredDescriptions.map((desc, index) => (
                               <div
                                 key={desc.id}
                                 onClick={() => handleDescriptionSelect(desc)}
-                                className="px-3 xs:px-4 py-2 hover:bg-blue-50 cursor-pointer flex justify-between items-center text-xs xs:text-sm"
+                                className={`px-4 py-3 cursor-pointer flex justify-between items-center hover:bg-blue-100 transition ${
+                                  index !== filteredDescriptions.length - 1 ? 'border-b border-gray-100' : ''
+                                }`}
                               >
-                                <span>{desc.text}</span>
-                                <span className="text-xs text-gray-400">
-                                  Used {desc._count?.works || 0} times
-                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-gray-800 font-medium truncate">
+                                    {desc.text}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2 ml-2">
+                                  {desc.pricePerUnit ? (
+                                    <span className="text-sm font-semibold text-blue-600 whitespace-nowrap">
+                                      ₹{desc.pricePerUnit.toFixed(2)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                                      No price
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
                         )}
                         <p className="mt-1 text-xs text-gray-500">
-                          Type new or select existing description
+                          Type to search or select from list below
                         </p>
                       </div>
 
@@ -645,6 +669,23 @@ const DailyWork = () => {
                                 parseFloat(formData.pricePerUnit || 0)
                             )}
                           </p>
+                        </div>
+                      )}
+
+                      {/* Save Price to Description */}
+                      {formData.descriptionId && (
+                        <div className="mb-4">
+                          <label className="flex items-center text-xs xs:text-sm">
+                            <input
+                              type="checkbox"
+                              checked={formData.updateDescriptionPrice}
+                              onChange={(e) =>
+                                setFormData({ ...formData, updateDescriptionPrice: e.target.checked })
+                              }
+                              className="w-4 h-4 mr-2 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-gray-700">Update description price (₹{formData.pricePerUnit})</span>
+                          </label>
                         </div>
                       )}
 

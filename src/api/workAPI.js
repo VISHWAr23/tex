@@ -23,10 +23,32 @@ export const getWorkDescriptions = async () => {
 /**
  * Create new work description
  * Called when worker types new description not in dropdown
+ * Can optionally include pricePerUnit to set a default price
  */
-export const createWorkDescription = async (text) => {
+export const createWorkDescription = async (text, pricePerUnit = null) => {
   try {
-    const response = await axiosInstance.post('/work/descriptions', { text });
+    const payload = { text };
+    if (pricePerUnit) {
+      payload.pricePerUnit = parseFloat(pricePerUnit);
+    }
+    const response = await axiosInstance.post('/work/descriptions', payload);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+/**
+ * Update work description price
+ * Allows updating existing description prices
+ */
+export const updateWorkDescription = async (descriptionId, text, pricePerUnit) => {
+  try {
+    const payload = { 
+      text,
+      pricePerUnit: parseFloat(pricePerUnit),
+    };
+    const response = await axiosInstance.put(`/work/descriptions/${descriptionId}`, payload);
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

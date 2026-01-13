@@ -98,7 +98,7 @@ const Exports = () => {
       const companyName = filters.companyName || undefined;
 
       const [exportData, statsData] = await Promise.all([
-        getAllExports(companyName, startDate, endDate),
+        getAllExports(companyName, startDate, endDate, undefined),
         getExportStatistics(companyName, startDate, endDate),
       ]);
 
@@ -240,6 +240,7 @@ const Exports = () => {
     }
   };
 
+  // Payment status toggle will be added after database migration
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -399,6 +400,10 @@ const Exports = () => {
                 ))}
               </datalist>
             </div>
+
+            <div className="sm:col-span-2 lg:col-span-1">
+              {/* Payment status filter removed - will be added after database migration */}
+            </div>
           </div>
         </div>
 
@@ -427,6 +432,9 @@ const Exports = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Total Amount
                     </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment Status
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
@@ -452,6 +460,10 @@ const Exports = () => {
                       </td>
                       <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-medium text-blue-600">
                         {formatCurrency(exportItem.totalAmount)}
+                      </td>
+                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-center">
+                        {/* Payment status badge will be added after database migration */}
+                        <span className="text-gray-500 text-xs">N/A</span>
                       </td>
                       <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap space-x-1 xs:space-x-2">
                         <button
@@ -608,6 +620,8 @@ const Exports = () => {
                   </label>
                 </div>
               </div>
+
+              {/* Payment Status - Will be added after database migration */}
 
               {formData.quantity && formData.pricePerUnit && (
                 <div className="bg-blue-50 p-3 xs:p-4 rounded-lg">
