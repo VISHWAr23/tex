@@ -13,7 +13,6 @@ const Workers = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [stats, setStats] = useState(null);
 
-  // Form states for creating/editing
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,7 +21,6 @@ const Workers = () => {
     monthlySalary: '',
   });
 
-  // Fetch users on component mount
   useEffect(() => {
     fetchUsers();
     fetchStats();
@@ -98,7 +96,6 @@ const Workers = () => {
         await usersAPI.updateUser(selectedUser.id, updateData);
         setSuccessMsg('User updated successfully');
       } else {
-        // Create user
         if (!formData.password) {
           setError('Password is required for new users');
           return;
@@ -139,194 +136,222 @@ const Workers = () => {
     }
   };
 
-  const inputClasses = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const buttonClasses = "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition";
-  const deleteButtonClasses = "px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition";
-  const editButtonClasses = "px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition text-sm";
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-xl text-gray-600">Loading users...</div>
+        <div className="w-8 h-8 border-2 border-surface-300 border-t-brand-600 animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="max-w-7xl">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
-              <button onClick={() => handleOpenModal()} className={buttonClasses}>
-                + Add New User
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="page-header">
+          <h1 className="page-title">Users Management</h1>
+          <p className="page-subtitle">Manage workers and administrators</p>
+        </div>
+        <button onClick={() => handleOpenModal()} className="action-button">
+          <svg className="action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Add New User</span>
+        </button>
+      </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="alert alert-error">
+          {error}
+        </div>
+      )}
+      {successMsg && (
+        <div className="alert alert-success">
+          {successMsg}
+        </div>
+      )}
+
+      {/* Statistics */}
+      {stats && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="stat-card">
+            <p className="stat-label">Total Users</p>
+            <p className="stat-value">{stats.totalUsers}</p>
+          </div>
+          {stats.byRole.map((role) => (
+            <div key={role.role} className="stat-card">
+              <p className="stat-label">{role.role} Users</p>
+              <p className="stat-value">{role.count}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Users Table */}
+      <div className="table-container">
+        {users.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Member Since</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr 
+                  key={user.id} 
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/workers/${user.id}`)}
+                >
+                  <td>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-surface-200 flex items-center justify-center text-sm font-semibold text-surface-600">
+                        {user.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-medium text-surface-900">{user.name}</span>
+                    </div>
+                  </td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`badge ${
+                      user.role === 'OWNER' ? 'badge-primary' : 'badge-neutral'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenModal(user)}
+                        className="btn-ghost btn-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id, user.name)}
+                        className="btn-ghost btn-sm text-accent-rose hover:bg-red-50"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">
+            <svg className="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p className="empty-state-title">No users found</p>
+            <p className="empty-state-text">Get started by adding your first user</p>
+            <button onClick={() => handleOpenModal()} className="btn-primary mt-4">
+              Add User
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                {isEditing ? 'Edit User' : 'Add New User'}
+              </h2>
+              <button onClick={handleCloseModal} className="btn-ghost btn-icon">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            {/* Messages */}
-            {error && (
-              <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-            {successMsg && (
-              <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-                {successMsg}
-              </div>
-            )}
-
-            {/* Statistics */}
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Users</h3>
-                  <p className="text-3xl font-bold text-blue-600">{stats.totalUsers}</p>
-                </div>
-                {stats.byRole.map((role) => (
-                  <div key={role.role} className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-gray-600 text-sm font-semibold capitalize">{role.role} Users</h3>
-                    <p className="text-3xl font-bold text-green-600">{role.count}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Users Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              {users.length > 0 ? (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member Since</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                      <tr 
-                        key={user.id} 
-                        className="hover:bg-gray-50 cursor-pointer"
-                        onClick={() => navigate(`/workers/${user.id}`)}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            user.role === 'OWNER' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2 flex" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => handleOpenModal(user)}
-                            className={editButtonClasses}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user.id, user.name)}
-                            className={deleteButtonClasses}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-6 text-center text-gray-600">No users found</div>
-              )}
-          </div>
-        </div>
-
-      {/* Modal for Create/Edit User */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold mb-6">
-              {isEditing ? 'Edit User' : 'Add New User'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={inputClasses}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={inputClasses}
-                  required
-                />
-              </div>
-
-              {!isEditing && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body space-y-4">
+                <div className="form-group">
+                  <label className="label">Name</label>
                   <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={inputClasses}
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="input"
+                    placeholder="Enter full name"
                     required
                   />
                 </div>
-              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className={inputClasses}
-                >
-                  <option value="WORKER">Worker</option>
-                  <option value="OWNER">Owner</option>
-                </select>
+                <div className="form-group">
+                  <label className="label">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="input"
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+
+                {!isEditing && (
+                  <div className="form-group">
+                    <label className="label">Password</label>
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="input"
+                      placeholder="Enter password"
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="label">Role</label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    className="select"
+                  >
+                    <option value="WORKER">Worker</option>
+                    <option value="OWNER">Owner</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="label">Monthly Salary (Optional)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.monthlySalary}
+                    onChange={(e) => setFormData({ ...formData, monthlySalary: e.target.value })}
+                    className="input"
+                    placeholder="Enter monthly salary"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Monthly Salary (Optional)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.monthlySalary}
-                  onChange={(e) => setFormData({ ...formData, monthlySalary: e.target.value })}
-                  className={inputClasses}
-                  placeholder="Enter monthly salary"
-                />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button type="submit" className={buttonClasses + ' flex-1'}>
-                  {isEditing ? 'Update User' : 'Create User'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition"
-                >
+              <div className="modal-footer">
+                <button type="button" onClick={handleCloseModal} className="btn-outline">
                   Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  {isEditing ? 'Update User' : 'Create User'}
                 </button>
               </div>
             </form>

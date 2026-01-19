@@ -7,22 +7,14 @@ import {
 } from '../../api/workAPI';
 import { usersAPI } from '../../api/usersAPI';
 
-/**
- * Attendance Component (Admin)
- * Allows admins to view and manage worker attendance
- * Attendance is auto-generated when workers submit daily work
- */
 const Attendance = () => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // View mode: 'daily' or 'summary'
   const [viewMode, setViewMode] = useState('daily');
 
-  // Filters
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -31,12 +23,10 @@ const Attendance = () => {
     endDate: new Date().toISOString().split('T')[0],
   });
 
-  // Fetch initial data
   useEffect(() => {
     fetchWorkers();
   }, []);
 
-  // Fetch attendance when date/view changes
   useEffect(() => {
     fetchAttendance();
   }, [selectedDate, dateRange, viewMode]);
@@ -84,18 +74,17 @@ const Attendance = () => {
     }
   };
 
-  // Get workers without attendance for the selected date
   const getWorkersWithoutAttendance = () => {
     if (!attendanceData?.records || !workers.length) return [];
     const recordedUserIds = attendanceData.records.map((r) => r.userId);
     return workers.filter((w) => !recordedUserIds.includes(w.id));
   };
 
-  const statusColors = {
-    PRESENT: 'bg-green-100 text-green-800',
-    ABSENT: 'bg-red-100 text-red-800',
-    HALF_DAY: 'bg-yellow-100 text-yellow-800',
-    LEAVE: 'bg-blue-100 text-blue-800',
+  const statusConfig = {
+    PRESENT: { bg: 'bg-accent-emerald/10', text: 'text-accent-emerald', label: 'Present' },
+    ABSENT: { bg: 'bg-accent-rose/10', text: 'text-accent-rose', label: 'Absent' },
+    HALF_DAY: { bg: 'bg-accent-amber/10', text: 'text-accent-amber', label: 'Half Day' },
+    LEAVE: { bg: 'bg-brand-100', text: 'text-brand-600', label: 'Leave' },
   };
 
   const formatCurrency = (amount) => {
@@ -115,385 +104,319 @@ const Attendance = () => {
     });
   };
 
-  const inputClasses =
-    'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500';
-
   if (loading && !attendanceData) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-xl text-gray-600">Loading attendance data...</div>
+        <div className="w-8 h-8 border-2 border-surface-300 border-t-brand-600 animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">Attendance Management</h1>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setViewMode('daily')}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    viewMode === 'daily'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Daily View
-                </button>
-                <button
-                  onClick={() => setViewMode('summary')}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    viewMode === 'summary'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Summary Report
-                </button>
-              </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="page-header">
+          <h1 className="page-title">Attendance Management</h1>
+          <p className="page-subtitle">Track and manage worker attendance</p>
+        </div>
+        <div className="flex gap-2 bg-surface-100 p-1 rounded-lg">
+          <button
+            onClick={() => setViewMode('daily')}
+            className={`px-4 py-2 font-medium text-sm rounded-md transition-all ${
+              viewMode === 'daily'
+                ? 'bg-white text-brand-600 shadow-sm'
+                : 'text-surface-600 hover:text-surface-900'
+            }`}
+          >
+            Daily View
+          </button>
+          <button
+            onClick={() => setViewMode('summary')}
+            className={`px-4 py-2 font-medium text-sm rounded-md transition-all ${
+              viewMode === 'summary'
+                ? 'bg-white text-brand-600 shadow-sm'
+                : 'text-surface-600 hover:text-surface-900'
+            }`}
+          >
+            Summary
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+
+      {/* Filters */}
+      <div className="card">
+        {viewMode === 'daily' ? (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="form-group mb-0">
+              <label className="label">Select Date</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="input"
+              />
             </div>
-
-            {/* Messages */}
-            {error && (
-              <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-                {success}
-              </div>
-            )}
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow p-4 mb-6">
-              {viewMode === 'daily' ? (
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <label className="font-medium text-gray-700">Select Date:</label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className={`${inputClasses} max-w-xs`}
-                  />
-                  <span className="text-gray-500">{formatDate(selectedDate)}</span>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={dateRange.startDate}
-                      onChange={(e) =>
-                        setDateRange({ ...dateRange, startDate: e.target.value })
-                      }
-                      className={inputClasses}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={dateRange.endDate}
-                      onChange={(e) =>
-                        setDateRange({ ...dateRange, endDate: e.target.value })
-                      }
-                      className={inputClasses}
-                    />
-                  </div>
-                </div>
-              )}
+            <div className="flex items-center gap-2 mt-6 sm:mt-0">
+              <span className="text-surface-600">{formatDate(selectedDate)}</span>
             </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="form-group mb-0">
+              <label className="label">Start Date</label>
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+                className="input"
+              />
+            </div>
+            <div className="form-group mb-0">
+              <label className="label">End Date</label>
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+                className="input"
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
-            {/* Daily View */}
-            {viewMode === 'daily' && attendanceData && (
-              <>
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-gray-500 text-sm">Present</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {attendanceData.summary?.present || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-gray-500 text-sm">Absent</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {attendanceData.summary?.absent || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-gray-500 text-sm">Half Day</p>
-                    <p className="text-2xl font-bold text-yellow-600">
-                      {attendanceData.summary?.halfDay || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg shadow p-4 text-center">
-                    <p className="text-gray-500 text-sm">Leave</p>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {attendanceData.summary?.leave || 0}
-                    </p>
-                  </div>
-                </div>
+      {/* Daily View */}
+      {viewMode === 'daily' && attendanceData && (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="stat-card">
+              <p className="stat-label">Present</p>
+              <p className="stat-value text-accent-emerald">{attendanceData.summary?.present || 0}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Absent</p>
+              <p className="stat-value text-accent-rose">{attendanceData.summary?.absent || 0}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Half Day</p>
+              <p className="stat-value text-accent-amber">{attendanceData.summary?.halfDay || 0}</p>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Leave</p>
+              <p className="stat-value text-brand-600">{attendanceData.summary?.leave || 0}</p>
+            </div>
+          </div>
 
-                {/* Attendance Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold">
-                      Attendance for {formatDate(selectedDate)}
-                    </h2>
-                  </div>
-                  <div className="overflow-x-auto">
-                    {attendanceData.records?.length > 0 ? (
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Worker
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Status
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Work Done
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Earnings
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {attendanceData.records.map((record) => (
-                            <tr key={record.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                  <p className="font-medium text-gray-900">
-                                    {record.user?.name}
-                                  </p>
-                                  <p className="text-sm text-gray-500">
-                                    {record.user?.email}
-                                  </p>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-3 py-1 text-sm rounded-full ${
-                                    statusColors[record.status]
-                                  }`}
-                                >
-                                  {record.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                {record.work ? (
-                                  <div>
-                                    <p className="text-sm text-gray-900">
-                                      {record.work.description?.text || '-'}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      Qty: {record.work.quantity}
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400">No work recorded</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                {record.work ? (
-                                  <span className="font-semibold text-green-600">
-                                    {formatCurrency(record.work.totalAmount)}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400">-</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <select
-                                  value={record.status}
-                                  onChange={(e) =>
-                                    handleStatusChange(record.userId, e.target.value)
-                                  }
-                                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                  <option value="PRESENT">Present</option>
-                                  <option value="ABSENT">Absent</option>
-                                  <option value="HALF_DAY">Half Day</option>
-                                  <option value="LEAVE">Leave</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        No attendance records for this date
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Workers without attendance */}
-                {getWorkersWithoutAttendance().length > 0 && (
-                  <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                      <h2 className="text-lg font-semibold text-red-600">
-                        Workers Without Attendance
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        These workers haven't submitted work for {formatDate(selectedDate)}
-                      </p>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Worker
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Mark Attendance
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {getWorkersWithoutAttendance().map((worker) => (
-                            <tr key={worker.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                  <p className="font-medium text-gray-900">
-                                    {worker.name}
-                                  </p>
-                                  <p className="text-sm text-gray-500">{worker.email}</p>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleStatusChange(worker.id, 'ABSENT')}
-                                    className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-                                  >
-                                    Absent
-                                  </button>
-                                  <button
-                                    onClick={() => handleStatusChange(worker.id, 'LEAVE')}
-                                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                                  >
-                                    Leave
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Summary View */}
-            {viewMode === 'summary' && attendanceData && (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold">
-                    Attendance Summary: {formatDate(dateRange.startDate)} -{' '}
-                    {formatDate(dateRange.endDate)}
-                  </h2>
-                </div>
-                <div className="overflow-x-auto">
-                  {attendanceData.report?.length > 0 ? (
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Worker
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Present
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Absent
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Half Day
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Leave
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Total Qty
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Total Earnings
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {attendanceData.report.map((item) => (
-                          <tr key={item.worker.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {item.worker.name}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {item.worker.email}
-                                </p>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                {item.stats.present}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                                {item.stats.absent}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                                {item.stats.halfDay}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                {item.stats.leave}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center font-semibold">
-                              {item.stats.totalQuantity}
-                            </td>
-                            <td className="px-6 py-4 text-center font-semibold text-green-600">
-                              {formatCurrency(item.stats.totalEarnings)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No attendance data for the selected period
-                    </div>
-                  )}
-                </div>
+          {/* Attendance Table */}
+          <div className="table-container">
+            <div className="px-6 py-4 border-b border-surface-200">
+              <h2 className="text-lg font-semibold text-surface-900">
+                Attendance for {formatDate(selectedDate)}
+              </h2>
+            </div>
+            {attendanceData.records?.length > 0 ? (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Worker</th>
+                    <th>Status</th>
+                    <th>Work Done</th>
+                    <th>Earnings</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceData.records.map((record) => (
+                    <tr key={record.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-surface-200 flex items-center justify-center text-sm font-semibold text-surface-600">
+                            {record.user?.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-medium text-surface-900">{record.user?.name}</p>
+                            <p className="text-xs text-surface-500">{record.user?.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge ${statusConfig[record.status].bg} ${statusConfig[record.status].text}`}>
+                          {statusConfig[record.status].label}
+                        </span>
+                      </td>
+                      <td>
+                        {record.work ? (
+                          <div>
+                            <p className="text-sm text-surface-900">{record.work.description?.text || '-'}</p>
+                            <p className="text-xs text-surface-500">Qty: {record.work.quantity}</p>
+                          </div>
+                        ) : (
+                          <span className="text-surface-400">No work recorded</span>
+                        )}
+                      </td>
+                      <td>
+                        {record.work ? (
+                          <span className="font-semibold text-accent-emerald">
+                            {formatCurrency(record.work.totalAmount)}
+                          </span>
+                        ) : (
+                          <span className="text-surface-400">-</span>
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          value={record.status}
+                          onChange={(e) => handleStatusChange(record.userId, e.target.value)}
+                          className="select text-sm py-1.5"
+                        >
+                          <option value="PRESENT">Present</option>
+                          <option value="ABSENT">Absent</option>
+                          <option value="HALF_DAY">Half Day</option>
+                          <option value="LEAVE">Leave</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="empty-state">
+                <svg className="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="empty-state-title">No attendance records</p>
+                <p className="empty-state-text">No records for this date</p>
               </div>
             )}
           </div>
+
+          {/* Workers without attendance */}
+          {getWorkersWithoutAttendance().length > 0 && (
+            <div className="table-container">
+              <div className="px-6 py-4 border-b border-surface-200">
+                <h2 className="text-lg font-semibold text-accent-rose">Workers Without Attendance</h2>
+                <p className="text-sm text-surface-500">
+                  These workers haven't submitted work for {formatDate(selectedDate)}
+                </p>
+              </div>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Worker</th>
+                    <th>Mark Attendance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getWorkersWithoutAttendance().map((worker) => (
+                    <tr key={worker.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-surface-200 flex items-center justify-center text-sm font-semibold text-surface-600">
+                            {worker.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-medium text-surface-900">{worker.name}</p>
+                            <p className="text-xs text-surface-500">{worker.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleStatusChange(worker.id, 'ABSENT')}
+                            className="btn-sm bg-accent-rose/10 text-accent-rose hover:bg-accent-rose/20"
+                          >
+                            Absent
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(worker.id, 'LEAVE')}
+                            className="btn-sm bg-brand-100 text-brand-600 hover:bg-brand-200"
+                          >
+                            Leave
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Summary View */}
+      {viewMode === 'summary' && attendanceData && (
+        <div className="table-container">
+          <div className="px-6 py-4 border-b border-surface-200">
+            <h2 className="text-lg font-semibold text-surface-900">
+              Attendance Summary: {formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}
+            </h2>
+          </div>
+          {attendanceData.report?.length > 0 ? (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Worker</th>
+                  <th className="text-center">Present</th>
+                  <th className="text-center">Absent</th>
+                  <th className="text-center">Half Day</th>
+                  <th className="text-center">Leave</th>
+                  <th className="text-center">Total Qty</th>
+                  <th className="text-center">Total Earnings</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceData.report.map((item) => (
+                  <tr key={item.worker.id}>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-surface-200 flex items-center justify-center text-sm font-semibold text-surface-600">
+                          {item.worker.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-surface-900">{item.worker.name}</p>
+                          <p className="text-xs text-surface-500">{item.worker.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-center">
+                      <span className="badge bg-accent-emerald/10 text-accent-emerald">{item.stats.present}</span>
+                    </td>
+                    <td className="text-center">
+                      <span className="badge bg-accent-rose/10 text-accent-rose">{item.stats.absent}</span>
+                    </td>
+                    <td className="text-center">
+                      <span className="badge bg-accent-amber/10 text-accent-amber">{item.stats.halfDay}</span>
+                    </td>
+                    <td className="text-center">
+                      <span className="badge bg-brand-100 text-brand-600">{item.stats.leave}</span>
+                    </td>
+                    <td className="text-center font-semibold text-surface-900">{item.stats.totalQuantity}</td>
+                    <td className="text-center font-semibold text-accent-emerald">
+                      {formatCurrency(item.stats.totalEarnings)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty-state">
+              <svg className="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="empty-state-title">No attendance data</p>
+              <p className="empty-state-text">No data for the selected period</p>
+            </div>
+          )}
         </div>
+      )}
+    </div>
   );
 };
 

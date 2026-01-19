@@ -9,11 +9,6 @@ import {
   getCompanies,
 } from '../../api/exportsAPI';
 
-/**
- * Exports Component (Admin)
- * Allows admins to manage company export records
- * Follows international standards for date formatting (ISO 8601)
- */
 const Exports = () => {
   const [exports, setExports] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -27,16 +22,14 @@ const Exports = () => {
   const [selectedExport, setSelectedExport] = useState(null);
   const [statistics, setStatistics] = useState(null);
 
-  // Filters
   const [filters, setFilters] = useState({
     companyName: '',
     date: new Date().toISOString().split('T')[0],
     startDate: '',
     endDate: '',
-    filterType: 'date', // 'date' or 'range'
+    filterType: 'date',
   });
 
-  // Form state
   const [formData, setFormData] = useState({
     companyName: '',
     date: new Date().toISOString().split('T')[0],
@@ -44,20 +37,17 @@ const Exports = () => {
     pricePerUnit: '',
     description: '',
     descriptionId: null,
-    updateDescriptionPrice: false, // Save price to description
+    updateDescriptionPrice: false,
   });
 
-  // Description search/filter state
   const [descriptionSearch, setDescriptionSearch] = useState('');
   const [showDescriptionDropdown, setShowDescriptionDropdown] = useState(false);
 
-  // Fetch initial data
   useEffect(() => {
     fetchCompanies();
     fetchDescriptions();
   }, []);
 
-  // Fetch export data when filters change
   useEffect(() => {
     fetchData();
   }, [filters.companyName, filters.date, filters.startDate, filters.endDate, filters.filterType]);
@@ -65,8 +55,7 @@ const Exports = () => {
   const fetchCompanies = async () => {
     try {
       const companiesList = await getCompanies();
-      // Extract company names from company objects
-      const names = companiesList.map(c => c.name);
+      const names = companiesList.map((c) => c.name);
       setCompanies(names || []);
     } catch (err) {
       console.error('Failed to fetch companies:', err);
@@ -113,7 +102,6 @@ const Exports = () => {
     }
   };
 
-  // Filtered descriptions based on search
   const filteredDescriptions = useMemo(() => {
     if (!descriptionSearch.trim()) return descriptions;
     const search = descriptionSearch.toLowerCase();
@@ -171,7 +159,6 @@ const Exports = () => {
       ...formData,
       description: desc.text,
       descriptionId: desc.id,
-      // Auto-fill price per unit if description has a saved price
       pricePerUnit: desc.pricePerUnit ? desc.pricePerUnit.toString() : formData.pricePerUnit,
     });
     setDescriptionSearch(desc.text);
@@ -240,8 +227,6 @@ const Exports = () => {
     }
   };
 
-  // Payment status toggle will be added after database migration
-  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -250,7 +235,6 @@ const Exports = () => {
     }).format(amount);
   };
 
-  // Format date
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
       year: 'numeric',
@@ -259,401 +243,314 @@ const Exports = () => {
     });
   };
 
-  const inputClasses =
-    'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const buttonClasses =
-    'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50';
-
   if (loading && exports.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-xl text-gray-600">Loading export data...</div>
+        <div className="w-8 h-8 border-2 border-surface-300 border-t-brand-600 animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 xs:gap-4 mb-6">
-          <h1 className="text-2xl xs:text-3xl font-bold text-gray-900">Export Management</h1>
-          <button onClick={() => handleOpenModal()} className={buttonClasses + ' whitespace-nowrap text-sm xs:text-base'}>
-            + Add Export Entry
-          </button>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="page-header">
+          <h1 className="page-title">Export Management</h1>
+          <p className="page-subtitle">Track and manage company exports</p>
         </div>
+        <button onClick={() => handleOpenModal()} className="action-button">
+          <svg className="action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Add Export Entry</span>
+        </button>
+      </div>
 
-        {/* Messages */}
-        {error && (
-          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-            {error}
+      {/* Messages */}
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+
+      {/* Statistics */}
+      {statistics && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="stat-card">
+            <p className="stat-label">Total Revenue</p>
+            <p className="stat-value text-brand-600">{formatCurrency(statistics.summary.totalRevenue)}</p>
+            <p className="text-sm text-surface-500 mt-1">{statistics.summary.totalExports} exports</p>
           </div>
-        )}
-        {success && (
-          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-            {success}
+          <div className="stat-card">
+            <p className="stat-label">Total Quantity</p>
+            <p className="stat-value text-accent-emerald">{statistics.summary.totalQuantity.toLocaleString()}</p>
+            <p className="text-sm text-surface-500 mt-1">Units exported</p>
           </div>
-        )}
-
-        {/* Statistics */}
-        {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-gray-600 text-sm font-semibold">Total Revenue</h3>
-              <p className="text-3xl font-bold text-blue-600">{formatCurrency(statistics.summary.totalRevenue)}</p>
-              <p className="text-sm text-gray-600 mt-1">{statistics.summary.totalExports} exports</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-gray-600 text-sm font-semibold">Total Quantity</h3>
-              <p className="text-3xl font-bold text-green-600">{statistics.summary.totalQuantity.toLocaleString()}</p>
-              <p className="text-sm text-gray-600 mt-1">Units exported</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-gray-600 text-sm font-semibold">Average Price</h3>
-              <p className="text-3xl font-bold text-purple-600">{formatCurrency(statistics.summary.averagePrice)}</p>
-              <p className="text-sm text-gray-600 mt-1">Per unit</p>
-            </div>
+          <div className="stat-card">
+            <p className="stat-label">Average Price</p>
+            <p className="stat-value text-accent-violet">{formatCurrency(statistics.summary.averagePrice)}</p>
+            <p className="text-sm text-surface-500 mt-1">Per unit</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-3 xs:p-4 mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-4">
-            <div className="sm:col-span-2 lg:col-span-1">
-              <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                Filter Type
-              </label>
-              <select
-                value={filters.filterType}
-                onChange={(e) =>
-                  setFilters({ ...filters, filterType: e.target.value })
-                }
-                className={inputClasses}
-              >
-                <option value="date">Single Date</option>
-                <option value="range">Date Range</option>
-              </select>
-            </div>
+      {/* Filters */}
+      <div className="card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="form-group">
+            <label className="label">Filter Type</label>
+            <select
+              value={filters.filterType}
+              onChange={(e) => setFilters({ ...filters, filterType: e.target.value })}
+              className="select"
+            >
+              <option value="date">Single Date</option>
+              <option value="range">Date Range</option>
+            </select>
+          </div>
 
-            {filters.filterType === 'date' ? (
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={filters.date}
-                  onChange={(e) =>
-                    setFilters({ ...filters, date: e.target.value })
-                  }
-                  className={inputClasses}
-                />
-              </div>
-            ) : (
-              <>
-                <div className="sm:col-span-1 lg:col-span-1">
-                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.startDate}
-                    onChange={(e) =>
-                      setFilters({ ...filters, startDate: e.target.value })
-                    }
-                    className={inputClasses}
-                  />
-                </div>
-                <div className="sm:col-span-1 lg:col-span-1">
-                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.endDate}
-                    onChange={(e) =>
-                      setFilters({ ...filters, endDate: e.target.value })
-                    }
-                    className={inputClasses}
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="sm:col-span-2 lg:col-span-1">
-              <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                Company
-              </label>
+          {filters.filterType === 'date' ? (
+            <div className="form-group">
+              <label className="label">Date</label>
               <input
-                type="text"
-                value={filters.companyName}
-                onChange={(e) =>
-                  setFilters({ ...filters, companyName: e.target.value })
-                }
-                placeholder="Filter by company"
-                className={inputClasses}
-                list="company-suggestions"
+                type="date"
+                value={filters.date}
+                onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+                className="input"
               />
-              <datalist id="company-suggestions">
-                {companies.map((company, idx) => (
-                  <option key={idx} value={company} />
-                ))}
-              </datalist>
-            </div>
-
-            <div className="sm:col-span-2 lg:col-span-1">
-              {/* Payment status filter removed - will be added after database migration */}
-            </div>
-          </div>
-        </div>
-
-        {/* Export Records Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {exports.length > 0 ? (
-            <div className="overflow-x-auto -mx-4 xs:mx-0">
-              <table className="min-w-full divide-y divide-gray-200 text-xs xs:text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Company
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price/Unit
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Amount
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Payment Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {exports.map((exportItem) => (
-                    <tr key={exportItem.id} className="hover:bg-gray-50">
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
-                        {formatDate(exportItem.date)}
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-medium text-gray-900">
-                        {exportItem.company?.name}
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 text-gray-600 max-w-xs truncate">
-                        {exportItem.description?.text}
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-600">
-                        {exportItem.quantity.toLocaleString()}
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-600">
-                        {formatCurrency(exportItem.pricePerUnit)}
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-medium text-blue-600">
-                        {formatCurrency(exportItem.totalAmount)}
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-center">
-                        {/* Payment status badge will be added after database migration */}
-                        <span className="text-gray-500 text-xs">N/A</span>
-                      </td>
-                      <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap space-x-1 xs:space-x-2">
-                        <button
-                          onClick={() => handleOpenModal(exportItem)}
-                          className="text-amber-600 hover:text-amber-800 font-medium text-xs xs:text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(exportItem.id)}
-                          className="text-red-600 hover:text-red-800 font-medium text-xs xs:text-sm"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           ) : (
-            <div className="p-6 text-center text-gray-600">
-              No export records found. Click "Add Export Entry" to create one.
-            </div>
+            <>
+              <div className="form-group">
+                <label className="label">Start Date</label>
+                <input
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                  className="input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">End Date</label>
+                <input
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                  className="input"
+                />
+              </div>
+            </>
           )}
+
+          <div className="form-group">
+            <label className="label">Company</label>
+            <input
+              type="text"
+              value={filters.companyName}
+              onChange={(e) => setFilters({ ...filters, companyName: e.target.value })}
+              placeholder="Filter by company"
+              className="input"
+              list="company-suggestions"
+            />
+            <datalist id="company-suggestions">
+              {companies.map((company, idx) => (
+                <option key={idx} value={company} />
+              ))}
+            </datalist>
+          </div>
         </div>
       </div>
 
-      {/* Modal for Create/Edit Export */}
+      {/* Export Records Table */}
+      <div className="table-container">
+        {exports.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Company</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Price/Unit</th>
+                <th>Total Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {exports.map((exportItem) => (
+                <tr key={exportItem.id}>
+                  <td className="font-medium text-surface-900">{formatDate(exportItem.date)}</td>
+                  <td>
+                    <span className="font-medium text-surface-900">{exportItem.company?.name}</span>
+                  </td>
+                  <td className="max-w-xs truncate text-surface-600">{exportItem.description?.text}</td>
+                  <td>
+                    <span className="badge badge-neutral">{exportItem.quantity.toLocaleString()}</span>
+                  </td>
+                  <td>{formatCurrency(exportItem.pricePerUnit)}</td>
+                  <td>
+                    <span className="font-semibold text-brand-600">{formatCurrency(exportItem.totalAmount)}</span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleOpenModal(exportItem)} className="btn-ghost btn-sm">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(exportItem.id)} className="btn-ghost btn-sm text-accent-rose hover:bg-red-50">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">
+            <svg className="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <p className="empty-state-title">No export records found</p>
+            <p className="empty-state-text">Add your first export entry to get started</p>
+            <button onClick={() => handleOpenModal()} className="btn-primary mt-4">
+              Add Export Entry
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg p-4 xs:p-6 max-w-md w-full max-h-[95vh] xs:max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl xs:text-2xl font-bold mb-4 xs:mb-6">
-              {isEditing ? 'Edit Export Entry' : 'Add Export Entry'}
-            </h2>
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{isEditing ? 'Edit Export Entry' : 'Add Export Entry'}</h2>
+              <button onClick={handleCloseModal} className="btn-ghost btn-icon">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-4">
-              <div>
-                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                  Company Name *
-                </label>
-                <select
-                  value={formData.companyName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, companyName: e.target.value })
-                  }
-                  className={inputClasses}
-                  required
-                >
-                  <option value="">Select a company</option>
-                  {companies.map((company, idx) => (
-                    <option key={idx} value={company}>
-                      {company}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body space-y-4">
+                <div className="form-group">
+                  <label className="label">Company Name *</label>
+                  <select
+                    value={formData.companyName}
+                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                    className="select"
+                    required
+                  >
+                    <option value="">Select a company</option>
+                    {companies.map((company, idx) => (
+                      <option key={idx} value={company}>
+                        {company}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                  Date *
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, date: e.target.value })
-                  }
-                  className={inputClasses}
-                  required
-                />
-              </div>
+                <div className="form-group">
+                  <label className="label">Date *</label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="input"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                  Description *
-                </label>
-                <div className="relative">
+                <div className="form-group relative">
+                  <label className="label">Description *</label>
                   <input
                     type="text"
                     value={descriptionSearch}
                     onChange={handleDescriptionChange}
                     onFocus={() => setShowDescriptionDropdown(true)}
-                    className={inputClasses}
+                    className="input"
                     placeholder="Type or select description"
                     required
                   />
                   {showDescriptionDropdown && filteredDescriptions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-surface-200 shadow-medium max-h-48 overflow-y-auto">
                       {filteredDescriptions.map((desc) => (
                         <div
                           key={desc.id}
                           onClick={() => handleDescriptionSelect(desc)}
-                          className="px-3 xs:px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center text-xs xs:text-sm"
+                          className="px-4 py-3 hover:bg-surface-50 cursor-pointer flex justify-between items-center text-sm border-b border-surface-100 last:border-b-0"
                         >
-                          <span>{desc.text}</span>
+                          <span className="text-surface-800">{desc.text}</span>
                           {desc.pricePerUnit && (
-                            <span className="text-xs text-blue-600">
-                              {formatCurrency(desc.pricePerUnit)}
-                            </span>
+                            <span className="text-brand-600 font-medium">{formatCurrency(desc.pricePerUnit)}</span>
                           )}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                  Quantity *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={formData.quantity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, quantity: e.target.value })
-                  }
-                  className={inputClasses}
-                  placeholder="Enter quantity"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                  Price Per Unit *
-                </label>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={formData.pricePerUnit}
-                  onChange={(e) =>
-                    setFormData({ ...formData, pricePerUnit: e.target.value })
-                  }
-                  className={inputClasses}
-                  placeholder="Enter price per unit"
-                  required
-                />
-                <div className="mt-2">
-                  <label className="flex items-center text-xs xs:text-sm text-gray-700 cursor-pointer">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="label">Quantity *</label>
                     <input
-                      type="checkbox"
-                      checked={formData.updateDescriptionPrice}
-                      onChange={(e) =>
-                        setFormData({ ...formData, updateDescriptionPrice: e.target.checked })
-                      }
-                      className="mr-2 rounded"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      className="input"
+                      placeholder="Enter quantity"
+                      required
                     />
-                    Save this price with description for future use
-                  </label>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="label">Price/Unit *</label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={formData.pricePerUnit}
+                      onChange={(e) => setFormData({ ...formData, pricePerUnit: e.target.value })}
+                      className="input"
+                      placeholder="Enter price"
+                      required
+                    />
+                  </div>
                 </div>
+
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.updateDescriptionPrice}
+                    onChange={(e) => setFormData({ ...formData, updateDescriptionPrice: e.target.checked })}
+                    className="w-4 h-4 accent-brand-600"
+                  />
+                  <span className="text-surface-700">Save price with description for future use</span>
+                </label>
+
+                {formData.quantity && formData.pricePerUnit && (
+                  <div className="p-4 bg-brand-50 border border-brand-100">
+                    <p className="text-sm text-surface-600">Total Amount</p>
+                    <p className="text-2xl font-bold text-brand-600">
+                      {formatCurrency(parseFloat(formData.quantity || 0) * parseFloat(formData.pricePerUnit || 0))}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Payment Status - Will be added after database migration */}
-
-              {formData.quantity && formData.pricePerUnit && (
-                <div className="bg-blue-50 p-3 xs:p-4 rounded-lg">
-                  <p className="text-xs xs:text-sm text-gray-700">
-                    Total Amount:{' '}
-                    <span className="font-bold text-blue-600">
-                      {formatCurrency(
-                        parseFloat(formData.quantity || 0) * parseFloat(formData.pricePerUnit || 0)
-                      )}
-                    </span>
-                  </p>
-                </div>
-              )}
-
-              <div className="flex gap-2 xs:gap-4 pt-3 xs:pt-4">
-                <button
-                  type="submit"
-                  className={buttonClasses + ' flex-1 text-xs xs:text-base'}
-                  disabled={submitting}
-                >
-                  {submitting
-                    ? 'Saving...'
-                    : isEditing
-                    ? 'Update Export'
-                    : 'Create Export'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition text-xs xs:text-base"
-                >
+              <div className="modal-footer">
+                <button type="button" onClick={handleCloseModal} className="btn-outline">
                   Cancel
+                </button>
+                <button type="submit" disabled={submitting} className="btn-primary">
+                  {submitting ? 'Saving...' : isEditing ? 'Update Export' : 'Create Export'}
                 </button>
               </div>
             </form>

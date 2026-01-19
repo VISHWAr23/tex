@@ -10,11 +10,6 @@ import {
 } from '../../api/workAPI';
 import { usersAPI } from '../../api/usersAPI';
 
-/**
- * DailyWork Component (Admin)
- * Allows admins to view, add, and manage all workers' daily work entries
- * Follows international standards for date formatting (ISO 8601)
- */
 const DailyWork = () => {
   const [works, setWorks] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -28,16 +23,14 @@ const DailyWork = () => {
   const [selectedWork, setSelectedWork] = useState(null);
   const [statistics, setStatistics] = useState(null);
 
-  // Filters
   const [filters, setFilters] = useState({
     userId: '',
     date: new Date().toISOString().split('T')[0],
     startDate: '',
     endDate: '',
-    filterType: 'date', // 'date' or 'range'
+    filterType: 'date',
   });
 
-  // Form state
   const [formData, setFormData] = useState({
     userId: '',
     date: new Date().toISOString().split('T')[0],
@@ -45,20 +38,17 @@ const DailyWork = () => {
     pricePerUnit: '',
     description: '',
     descriptionId: null,
-    updateDescriptionPrice: false, // Save price to description
+    updateDescriptionPrice: false,
   });
 
-  // Description search/filter state
   const [descriptionSearch, setDescriptionSearch] = useState('');
   const [showDescriptionDropdown, setShowDescriptionDropdown] = useState(false);
 
-  // Fetch initial data
   useEffect(() => {
     fetchWorkers();
     fetchDescriptions();
   }, []);
 
-  // Fetch work data when filters change
   useEffect(() => {
     fetchData();
   }, [filters.userId, filters.date, filters.startDate, filters.endDate, filters.filterType]);
@@ -113,7 +103,6 @@ const DailyWork = () => {
     }
   };
 
-  // Filtered descriptions based on search
   const filteredDescriptions = useMemo(() => {
     if (!descriptionSearch.trim()) return descriptions;
     const search = descriptionSearch.toLowerCase();
@@ -166,15 +155,12 @@ const DailyWork = () => {
   };
 
   const handleDescriptionSelect = (desc) => {
-    console.log('Selected description:', desc);
     setFormData({
       ...formData,
       description: desc.text,
       descriptionId: desc.id,
-      // Auto-fill price per unit if description has a saved price
       pricePerUnit: desc.pricePerUnit ? desc.pricePerUnit.toString() : formData.pricePerUnit,
     });
-    console.log('Updated pricePerUnit:', desc.pricePerUnit ? desc.pricePerUnit.toString() : formData.pricePerUnit);
     setDescriptionSearch(desc.text);
     setShowDescriptionDropdown(false);
   };
@@ -206,13 +192,9 @@ const DailyWork = () => {
         updateDescriptionPrice: formData.updateDescriptionPrice,
       };
 
-      // If new description, create it first
       if (!formData.descriptionId && formData.description) {
         try {
-          const newDesc = await createWorkDescription(
-            formData.description,
-            formData.pricePerUnit // Pass the price per unit
-          );
+          const newDesc = await createWorkDescription(formData.description, formData.pricePerUnit);
           payload.descriptionId = newDesc.id;
           fetchDescriptions();
         } catch (descErr) {
@@ -224,8 +206,6 @@ const DailyWork = () => {
         await updateWork(selectedWork.id, payload);
         setSuccess('Work entry updated successfully!');
       } else {
-        // For admin creating work for a user, we need to handle this differently
-        // The backend should support admin creating work for any user
         await createWork({ ...payload, userId: parseInt(formData.userId, 10) });
         setSuccess('Work entry created successfully!');
       }
@@ -255,7 +235,6 @@ const DailyWork = () => {
     }
   };
 
-  // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -264,7 +243,6 @@ const DailyWork = () => {
     }).format(amount);
   };
 
-  // Format date
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
       year: 'numeric',
@@ -273,450 +251,335 @@ const DailyWork = () => {
     });
   };
 
-  const inputClasses =
-    'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const buttonClasses =
-    'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50';
-
   if (loading && works.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-xl text-gray-600">Loading work data...</div>
+        <div className="w-8 h-8 border-2 border-surface-300 border-t-brand-600 animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 xs:gap-4 mb-6">
-              <h1 className="text-2xl xs:text-3xl font-bold text-gray-900">Daily Work Management</h1>
-              <button onClick={() => handleOpenModal()} className={buttonClasses + ' whitespace-nowrap text-sm xs:text-base'}>
-                + Add Work Entry
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="page-header">
+          <h1 className="page-title">Daily Work Management</h1>
+          <p className="page-subtitle">Track and manage all work entries</p>
+        </div>
+        <button onClick={() => handleOpenModal()} className="action-button">
+          <svg className="action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Add Work Entry</span>
+        </button>
+      </div>
+
+      {/* Messages */}
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+
+      {/* Filters */}
+      <div className="card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="form-group">
+            <label className="label">Filter Type</label>
+            <select
+              value={filters.filterType}
+              onChange={(e) => setFilters({ ...filters, filterType: e.target.value })}
+              className="select"
+            >
+              <option value="date">Single Date</option>
+              <option value="range">Date Range</option>
+            </select>
+          </div>
+
+          {filters.filterType === 'date' ? (
+            <div className="form-group">
+              <label className="label">Date</label>
+              <input
+                type="date"
+                value={filters.date}
+                onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+                className="input"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="form-group">
+                <label className="label">Start Date</label>
+                <input
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                  className="input"
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">End Date</label>
+                <input
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                  className="input"
+                />
+              </div>
+            </>
+          )}
+
+          <div className="form-group">
+            <label className="label">Worker</label>
+            <select
+              value={filters.userId}
+              onChange={(e) => setFilters({ ...filters, userId: e.target.value })}
+              className="select"
+            >
+              <option value="">All Workers</option>
+              {workers.map((worker) => (
+                <option key={worker.id} value={worker.id}>
+                  {worker.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      {statistics && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="stat-card">
+            <p className="stat-label">Total Entries</p>
+            <p className="stat-value text-brand-600">{statistics.summary?.totalRecords || 0}</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-label">Total Quantity</p>
+            <p className="stat-value text-accent-emerald">{statistics.summary?.totalQuantity || 0}</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-label">Total Payout</p>
+            <p className="stat-value text-accent-violet">{formatCurrency(statistics.summary?.totalEarnings || 0)}</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-label">Avg per Entry</p>
+            <p className="stat-value text-accent-amber">{formatCurrency(statistics.summary?.averageEarning || 0)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Work Table */}
+      <div className="table-container">
+        {works.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Worker</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Price/Unit</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {works.map((work) => (
+                <tr key={work.id}>
+                  <td>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-surface-900">{formatDate(work.date)}</span>
+                      <span className="text-xs text-surface-500">
+                        {new Date(work.date).toLocaleDateString('en-IN', { weekday: 'short' })}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="font-medium">{work.user?.name || '-'}</td>
+                  <td className="max-w-xs truncate">{work.description?.text || '-'}</td>
+                  <td>
+                    <span className="badge badge-neutral">{work.quantity}</span>
+                  </td>
+                  <td>{formatCurrency(work.pricePerUnit)}</td>
+                  <td>
+                    <span className="font-semibold text-accent-emerald">{formatCurrency(work.totalAmount)}</span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleOpenModal(work)} className="btn-ghost btn-sm">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(work.id)} className="btn-ghost btn-sm text-accent-rose hover:bg-red-50">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">
+            <svg className="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p className="empty-state-title">No work entries found</p>
+            <p className="empty-state-text">Try changing the filters or add a new entry</p>
+            <button onClick={() => handleOpenModal()} className="btn-primary mt-4">
+              Add Entry
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{isEditing ? 'Edit Work Entry' : 'Add Work Entry'}</h2>
+              <button onClick={handleCloseModal} className="btn-ghost btn-icon">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            {/* Messages */}
-            {error && (
-              <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-                {success}
-              </div>
-            )}
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow p-3 xs:p-4 mb-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-4">
-                <div className="sm:col-span-2 lg:col-span-1">
-                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                    Filter Type
-                  </label>
-                  <select
-                    value={filters.filterType}
-                    onChange={(e) =>
-                      setFilters({ ...filters, filterType: e.target.value })
-                    }
-                    className={inputClasses}
-                  >
-                    <option value="date">Single Date</option>
-                    <option value="range">Date Range</option>
-                  </select>
-                </div>
-
-                {filters.filterType === 'date' ? (
-                  <div className="sm:col-span-2 lg:col-span-1">
-                    <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      value={filters.date}
-                      onChange={(e) =>
-                        setFilters({ ...filters, date: e.target.value })
-                      }
-                      className={inputClasses}
-                    />
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body space-y-4">
+                {!isEditing && (
+                  <div className="form-group">
+                    <label className="label">Worker *</label>
+                    <select
+                      value={formData.userId}
+                      onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                      className="select"
+                      required
+                    >
+                      <option value="">Select Worker</option>
+                      {workers.map((worker) => (
+                        <option key={worker.id} value={worker.id}>
+                          {worker.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                ) : (
-                  <>
-                    <div className="sm:col-span-1 lg:col-span-1">
-                      <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                        Start Date
-                      </label>
-                      <input
-                        type="date"
-                        value={filters.startDate}
-                        onChange={(e) =>
-                          setFilters({ ...filters, startDate: e.target.value })
-                        }
-                        className={inputClasses}
-                      />
-                    </div>
-                    <div className="sm:col-span-1 lg:col-span-1">
-                      <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                        End Date
-                      </label>
-                      <input
-                        type="date"
-                        value={filters.endDate}
-                        onChange={(e) =>
-                          setFilters({ ...filters, endDate: e.target.value })
-                        }
-                        className={inputClasses}
-                      />
-                    </div>
-                  </>
                 )}
 
-                <div className="sm:col-span-2 lg:col-span-1">
-                  <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1">
-                    Worker
-                  </label>
-                  <select
-                    value={filters.userId}
-                    onChange={(e) =>
-                      setFilters({ ...filters, userId: e.target.value })
-                    }
-                    className={inputClasses}
-                  >
-                    <option value="">All Workers</option>
-                    {workers.map((worker) => (
-                      <option key={worker.id} value={worker.id}>
-                        {worker.name}
-                      </option>
-                    ))}
-                  </select>
+                <div className="form-group">
+                  <label className="label">Date *</label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="input"
+                    required
+                    disabled={isEditing}
+                  />
                 </div>
-              </div>
-            </div>
 
-            {/* Statistics Cards */}
-            {statistics && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Entries</h3>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {statistics.summary?.totalRecords || 0}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Quantity</h3>
-                  <p className="text-3xl font-bold text-green-600">
-                    {statistics.summary?.totalQuantity || 0}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Total Payout</h3>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {formatCurrency(statistics.summary?.totalEarnings || 0)}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-gray-600 text-sm font-semibold">Avg per Entry</h3>
-                  <p className="text-3xl font-bold text-orange-600">
-                    {formatCurrency(statistics.summary?.averageEarning || 0)}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Work List */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto -mx-4 xs:mx-0">
-                {works.length > 0 ? (
-                  <table className="min-w-full divide-y divide-gray-200 text-xs xs:text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Worker
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Description
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Quantity
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Price/Unit
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Total
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Attendance
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {works.map((work) => (
-                        <tr key={work.id} className="hover:bg-gray-50">
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
-                            {formatDate(work.date)}
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
-                            {work.user?.name || '-'}
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 text-gray-900 max-w-xs truncate">
-                            {work.description?.text || '-'}
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
-                            {work.quantity}
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-gray-900">
-                            {formatCurrency(work.pricePerUnit)}
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap font-semibold text-green-600">
-                            {formatCurrency(work.totalAmount)}
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                work.attendance?.status === 'PRESENT'
-                                  ? 'bg-green-100 text-green-800'
-                                  : work.attendance?.status === 'HALF_DAY'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : work.attendance?.status === 'LEAVE'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {work.attendance?.status || 'N/A'}
+                <div className="form-group relative">
+                  <label className="label">Work Description *</label>
+                  <input
+                    type="text"
+                    value={descriptionSearch}
+                    onChange={handleDescriptionChange}
+                    onFocus={() => setShowDescriptionDropdown(true)}
+                    placeholder="Type or select description..."
+                    className="input"
+                    required
+                  />
+                  {showDescriptionDropdown && filteredDescriptions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-surface-200 shadow-medium max-h-60 overflow-y-auto">
+                      {filteredDescriptions.map((desc) => (
+                        <div
+                          key={desc.id}
+                          onClick={() => handleDescriptionSelect(desc)}
+                          className="px-4 py-3 cursor-pointer flex justify-between items-center hover:bg-surface-50 transition border-b border-surface-100 last:border-b-0"
+                        >
+                          <p className="text-sm text-surface-800 font-medium truncate">{desc.text}</p>
+                          {desc.pricePerUnit ? (
+                            <span className="text-sm font-semibold text-brand-600 whitespace-nowrap ml-2">
+                              ₹{desc.pricePerUnit.toFixed(2)}
                             </span>
-                          </td>
-                          <td className="px-3 xs:px-6 py-2 xs:py-4 whitespace-nowrap text-xs xs:text-sm space-x-1 xs:space-x-2">
-                            <button
-                              onClick={() => handleOpenModal(work)}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(work.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
+                          ) : (
+                            <span className="text-xs text-surface-400 whitespace-nowrap ml-2">No price</span>
+                          )}
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No work entries found</p>
-                    <p className="text-gray-400 text-sm mt-2">
-                      Try changing the filters or add a new entry
+                    </div>
+                  )}
+                  <p className="mt-1 text-xs text-surface-500">Type to search or select from list</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="label">Quantity *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      className="input"
+                      placeholder="Enter quantity"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="label">Price/Unit (₹) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={formData.pricePerUnit}
+                      onChange={(e) => setFormData({ ...formData, pricePerUnit: e.target.value })}
+                      className="input"
+                      placeholder="Enter price"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {formData.quantity && formData.pricePerUnit && (
+                  <div className="p-4 bg-accent-emerald/10 border border-accent-emerald/20">
+                    <p className="text-sm text-surface-600">Total Amount</p>
+                    <p className="text-2xl font-bold text-accent-emerald">
+                      {formatCurrency(parseFloat(formData.quantity || 0) * parseFloat(formData.pricePerUnit || 0))}
                     </p>
                   </div>
                 )}
+
+                {formData.descriptionId && (
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.updateDescriptionPrice}
+                      onChange={(e) => setFormData({ ...formData, updateDescriptionPrice: e.target.checked })}
+                      className="w-4 h-4 accent-brand-600"
+                    />
+                    <span className="text-surface-700">Update description price to ₹{formData.pricePerUnit}</span>
+                  </label>
+                )}
               </div>
-            </div>
 
-            {/* Modal */}
-            {showModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[95vh] xs:max-h-[90vh] overflow-y-auto">
-                  <div className="p-4 xs:p-6">
-                    <h2 className="text-xl xs:text-2xl font-bold mb-4 xs:mb-6">
-                      {isEditing ? 'Edit Work Entry' : 'Add Work Entry'}
-                    </h2>
-                    <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-4">
-                      {/* Worker Selection */}
-                      {!isEditing && (
-                        <div className="mb-3 xs:mb-4">
-                          <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                            Worker *
-                          </label>
-                          <select
-                            value={formData.userId}
-                            onChange={(e) =>
-                              setFormData({ ...formData, userId: e.target.value })
-                            }
-                            className={inputClasses}
-                            required
-                          >
-                            <option value="">Select Worker</option>
-                            {workers.map((worker) => (
-                              <option key={worker.id} value={worker.id}>
-                                {worker.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      {/* Date */}
-                      <div className="mb-3 xs:mb-4">
-                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                          Date *
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.date}
-                          onChange={(e) =>
-                            setFormData({ ...formData, date: e.target.value })
-                          }
-                          className={inputClasses}
-                          required
-                          disabled={isEditing}
-                        />
-                      </div>
-
-                      {/* Description with Autocomplete */}
-                      <div className="mb-3 xs:mb-4 relative">
-                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                          Work Description *
-                        </label>
-                        <input
-                          type="text"
-                          value={descriptionSearch}
-                          onChange={handleDescriptionChange}
-                          onFocus={() => setShowDescriptionDropdown(true)}
-                          placeholder="Type or select description..."
-                          className={inputClasses}
-                          required
-                        />
-                        {showDescriptionDropdown && filteredDescriptions.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                            {filteredDescriptions.map((desc, index) => (
-                              <div
-                                key={desc.id}
-                                onClick={() => handleDescriptionSelect(desc)}
-                                className={`px-4 py-3 cursor-pointer flex justify-between items-center hover:bg-blue-100 transition ${
-                                  index !== filteredDescriptions.length - 1 ? 'border-b border-gray-100' : ''
-                                }`}
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm text-gray-800 font-medium truncate">
-                                    {desc.text}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2 ml-2">
-                                  {desc.pricePerUnit ? (
-                                    <span className="text-sm font-semibold text-blue-600 whitespace-nowrap">
-                                      ₹{desc.pricePerUnit.toFixed(2)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                                      No price
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <p className="mt-1 text-xs text-gray-500">
-                          Type to search or select from list below
-                        </p>
-                      </div>
-
-                      {/* Quantity */}
-                      <div className="mb-3 xs:mb-4">
-                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                          Quantity (Units) *
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={formData.quantity}
-                          onChange={(e) =>
-                            setFormData({ ...formData, quantity: e.target.value })
-                          }
-                          className={inputClasses}
-                          placeholder="Enter quantity"
-                          required
-                        />
-                      </div>
-
-                      {/* Price per Unit */}
-                      <div className="mb-3 xs:mb-4">
-                        <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-2">
-                          Price per Unit (₹) *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          value={formData.pricePerUnit}
-                          onChange={(e) =>
-                            setFormData({ ...formData, pricePerUnit: e.target.value })
-                          }
-                          className={inputClasses}
-                          placeholder="Enter price per unit"
-                          required
-                        />
-                      </div>
-
-                      {/* Total Preview */}
-                      {formData.quantity && formData.pricePerUnit && (
-                        <div className="mb-4 xs:mb-6 p-3 xs:p-4 bg-green-50 rounded-lg">
-                          <p className="text-xs xs:text-sm text-gray-600">Total Amount</p>
-                          <p className="text-xl xs:text-2xl font-bold text-green-600">
-                            {formatCurrency(
-                              parseFloat(formData.quantity || 0) *
-                                parseFloat(formData.pricePerUnit || 0)
-                            )}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Save Price to Description */}
-                      {formData.descriptionId && (
-                        <div className="mb-4">
-                          <label className="flex items-center text-xs xs:text-sm">
-                            <input
-                              type="checkbox"
-                              checked={formData.updateDescriptionPrice}
-                              onChange={(e) =>
-                                setFormData({ ...formData, updateDescriptionPrice: e.target.checked })
-                              }
-                              className="w-4 h-4 mr-2 text-blue-600 rounded focus:ring-blue-500"
-                            />
-                            <span className="text-gray-700">Update description price (₹{formData.pricePerUnit})</span>
-                          </label>
-                        </div>
-                      )}
-
-                      {/* Buttons */}
-                      <div className="flex gap-2 xs:gap-3 pt-3 xs:pt-4">
-                        <button
-                          type="button"
-                          onClick={handleCloseModal}
-                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition text-xs xs:text-base"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className={`flex-1 ${buttonClasses} text-xs xs:text-base`}
-                        >
-                          {submitting
-                            ? 'Saving...'
-                            : isEditing
-                            ? 'Update Entry'
-                            : 'Create Entry'}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
+              <div className="modal-footer">
+                <button type="button" onClick={handleCloseModal} className="btn-outline">
+                  Cancel
+                </button>
+                <button type="submit" disabled={submitting} className="btn-primary">
+                  {submitting ? 'Saving...' : isEditing ? 'Update Entry' : 'Create Entry'}
+                </button>
               </div>
-            )}
+            </form>
           </div>
         </div>
+      )}
+    </div>
   );
 };
 

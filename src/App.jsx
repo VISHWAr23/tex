@@ -11,6 +11,7 @@ import Dashboard from './pages/Admin/Dashboard';
 import Workers from './pages/Admin/Workers';
 import WorkerDetail from './pages/Admin/WorkerDetail';
 import Finance from './pages/Admin/Finance';
+import FinancialAnalytics from './pages/Admin/FinancialAnalytics';
 import HomeExpenses from './pages/Admin/HomeExpenses';
 import Reports from './pages/Admin/Reports';
 import DailyWork from './pages/Admin/DailyWork';
@@ -58,6 +59,7 @@ function App() {
         <Route path="/workers/:id" element={<WorkerDetail />} />
         <Route path="/admin/exports" element={<Exports />} />
         <Route path="/admin/finance" element={<Finance />} />
+        <Route path="/admin/financial-analytics" element={<FinancialAnalytics />} />
         <Route path="/admin/home-expenses" element={<HomeExpenses />} />
         <Route path="/admin/reports" element={<Reports />} />
       </Route>

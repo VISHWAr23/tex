@@ -9,19 +9,15 @@ const MyProfile = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Edit form states
   const [editData, setEditData] = useState({ name: '', email: '' });
-
-  // Password form states
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
-  // Fetch user profile on mount
   useEffect(() => {
     fetchProfile();
   }, [user]);
@@ -44,14 +40,14 @@ const MyProfile = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessMsg('');
+    setSuccess('');
 
     try {
       const response = await usersAPI.updateUser(user.id, editData);
       setProfileData(response.data);
-      setSuccessMsg('Profile updated successfully');
+      setSuccess('Profile updated successfully');
       setIsEditing(false);
-      setTimeout(() => setSuccessMsg(''), 3000);
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to update profile';
       setError(message);
@@ -61,9 +57,8 @@ const MyProfile = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessMsg('');
+    setSuccess('');
 
-    // Validate password match
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setError('New passwords do not match');
       return;
@@ -80,180 +75,241 @@ const MyProfile = () => {
         newPassword: passwordData.newPassword,
       });
 
-      setSuccessMsg('Password changed successfully');
+      setSuccess('Password changed successfully');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
-      setTimeout(() => setSuccessMsg(''), 3000);
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to change password';
       setError(message);
     }
   };
 
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-xl text-gray-600">Loading profile...</div>
+        <div className="w-8 h-8 border-2 border-surface-300 border-t-brand-600 animate-spin"></div>
       </div>
     );
   }
 
-  const inputClasses = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const buttonClasses = "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition";
-  const cancelButtonClasses = "px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition";
-
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">My Profile</h1>
+      {/* Header */}
+      <div className="page-header">
+        <h1 className="page-title">My Profile</h1>
+        <p className="page-subtitle">Manage your account information and settings</p>
+      </div>
 
-          {/* Messages */}
-          {error && (
-            <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-          {successMsg && (
-            <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-              {successMsg}
-            </div>
-          )}
+      {/* Messages */}
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            {/* Profile Information */}
-            {!isEditing && profileData && (
-              <div className="space-y-6">
-                <div>
-                  <label className="text-gray-500 text-sm">Name</label>
-                  <p className="text-lg font-semibold">{profileData.name}</p>
-                </div>
-
-                <div>
-                  <label className="text-gray-500 text-sm">Email</label>
-                  <p className="text-lg font-semibold">{profileData.email}</p>
-                </div>
-
-                <div>
-                  <label className="text-gray-500 text-sm">Role</label>
-                  <p className="text-lg font-semibold capitalize">{profileData.role}</p>
-                </div>
-
-                <div>
-                  <label className="text-gray-500 text-sm">Member Since</label>
-                  <p className="text-lg font-semibold">{new Date(profileData.createdAt).toLocaleDateString()}</p>
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className={buttonClasses}
-                  >
-                    Edit Profile
-                  </button>
-                  <button
-                    onClick={() => setIsChangingPassword(true)}
-                    className={buttonClasses}
-                  >
-                    Change Password
-                  </button>
-                </div>
+      {/* Profile Card */}
+      <div className="card">
+        {!isEditing && !isChangingPassword && profileData && (
+          <div className="space-y-6">
+            {/* Profile Info */}
+            <div className="flex items-center gap-4 pb-6 border-b border-surface-200">
+              <div className="w-16 h-16 bg-brand-600 flex items-center justify-center text-white text-2xl font-bold">
+                {profileData.name?.charAt(0)?.toUpperCase()}
               </div>
-            )}
+              <div>
+                <h2 className="text-xl font-semibold text-surface-900">{profileData.name}</h2>
+                <p className="text-surface-500">{profileData.email}</p>
+              </div>
+            </div>
 
-            {/* Edit Profile Form */}
-            {isEditing && (
-              <form onSubmit={handleEditSubmit} className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-900">Edit Profile</h2>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                  <input
-                    type="text"
-                    value={editData.name}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    className={inputClasses}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={editData.email}
-                    onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                    className={inputClasses}
-                    required
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <button type="submit" className={buttonClasses}>
-                    Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditData({ name: profileData.name, email: profileData.email });
-                    }}
-                    className={cancelButtonClasses}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-surface-500">Full Name</p>
+                <p className="font-medium text-surface-900 mt-1">{profileData.name}</p>
+              </div>
 
-            {/* Change Password Form */}
-            {isChangingPassword && (
-              <form onSubmit={handlePasswordSubmit} className="space-y-6 border-t pt-8">
-                <h2 className="text-xl font-semibold text-gray-900">Change Password</h2>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                  <input
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    className={inputClasses}
-                    required
+              <div>
+                <p className="text-sm text-surface-500">Email Address</p>
+                <p className="font-medium text-surface-900 mt-1">{profileData.email}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-surface-500">Role</p>
+                <span className="badge badge-primary mt-1">{profileData.role}</span>
+              </div>
+
+              <div>
+                <p className="text-sm text-surface-500">Member Since</p>
+                <p className="font-medium text-surface-900 mt-1">{formatDate(profileData.createdAt)}</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-6 border-t border-surface-200">
+              <button onClick={() => setIsEditing(true)} className="btn-primary">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                  <input
-                    type="password"
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className={inputClasses}
-                    required
+                </svg>
+                Edit Profile
+              </button>
+              <button onClick={() => setIsChangingPassword(true)} className="btn-outline">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    className={inputClasses}
-                    required
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <button type="submit" className={buttonClasses}>
-                    Change Password
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsChangingPassword(false);
-                      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                    }}
-                    className={cancelButtonClasses}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
+                </svg>
+                Change Password
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Edit Profile Form */}
+        {isEditing && (
+          <form onSubmit={handleEditSubmit} className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-surface-200">
+              <h2 className="text-lg font-semibold text-surface-900">Edit Profile</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditData({ name: profileData.name, email: profileData.email });
+                }}
+                className="btn-ghost btn-icon"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="form-group">
+              <label className="label">Name</label>
+              <input
+                type="text"
+                value={editData.name}
+                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                className="input"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="label">Email</label>
+              <input
+                type="email"
+                value={editData.email}
+                onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                className="input"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button type="submit" className="btn-primary">
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditData({ name: profileData.name, email: profileData.email });
+                }}
+                className="btn-outline"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Change Password Form */}
+        {isChangingPassword && (
+          <form onSubmit={handlePasswordSubmit} className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-surface-200">
+              <h2 className="text-lg font-semibold text-surface-900">Change Password</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsChangingPassword(false);
+                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+                className="btn-ghost btn-icon"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="form-group">
+              <label className="label">Current Password</label>
+              <input
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                className="input"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="label">New Password</label>
+              <input
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                className="input"
+                required
+              />
+              <p className="text-xs text-surface-500 mt-1">Must be at least 6 characters</p>
+            </div>
+
+            <div className="form-group">
+              <label className="label">Confirm New Password</label>
+              <input
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                className="input"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button type="submit" className="btn-primary">
+                Change Password
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsChangingPassword(false);
+                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+                className="btn-outline"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 };
 
