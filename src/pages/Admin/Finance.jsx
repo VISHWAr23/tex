@@ -426,10 +426,10 @@ export default function Finance() {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={closeModal} className="btn-outline">
+                <button type="button" onClick={closeModal} className="modal-btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting} className="btn-primary">
+                <button type="submit" disabled={submitting} className="modal-btn-submit">
                   {submitting ? 'Saving...' : editingExpense ? 'Update' : 'Add Expense'}
                 </button>
               </div>

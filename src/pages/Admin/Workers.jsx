@@ -347,10 +347,10 @@ const Workers = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={handleCloseModal} className="btn-outline">
+                <button type="button" onClick={handleCloseModal} className="modal-btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="modal-btn-submit">
                   {isEditing ? 'Update User' : 'Create User'}
                 </button>
               </div>

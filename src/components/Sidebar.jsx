@@ -124,13 +124,12 @@ const Sidebar = () => {
     <aside className="hidden md:flex flex-col bg-white border-r border-surface-200 w-64 min-h-screen">
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-surface-200">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-600 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <span className="text-lg font-bold text-surface-900 tracking-tight">StitchHub</span>
+        <div className="flex items-center">
+          <img 
+            src="/logo&name.jpeg" 
+            alt="RKV TEX Logo" 
+            className="h-10 w-auto object-contain"
+          />
         </div>
       </div>
 
@@ -168,7 +167,7 @@ const Sidebar = () => {
             <div className="w-2 h-2 bg-accent-emerald animate-pulse"></div>
             <span>System Online</span>
           </div>
-          <p className="text-xs text-surface-400 mt-1">v2.0.0 • © 2026 StitchHub</p>
+          <p className="text-xs text-surface-400 mt-1">v2.0.0 • © 2026 RKV TEX</p>
         </div>
       </div>
     </aside>

@@ -436,10 +436,10 @@ const WorkerDetail = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={handleClosePaymentModal} className="btn-outline">
+                <button type="button" onClick={handleClosePaymentModal} className="modal-btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="modal-btn-submit">
                   Record Payment
                 </button>
               </div>

@@ -59,13 +59,12 @@ const Navbar = () => {
           </button>
           
           {/* Mobile Logo */}
-          <div className="md:hidden flex items-center gap-2">
-            <div className="w-7 h-7 bg-brand-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="font-bold text-surface-900">StitchHub</span>
+          <div className="md:hidden flex items-center">
+            <img 
+              src="/logo&name.jpeg" 
+              alt="RKV TEX Logo" 
+              className="h-8 w-auto object-contain"
+            />
           </div>
 
           {/* Date Display - Desktop */}
@@ -150,13 +149,12 @@ const Navbar = () => {
           <div className="absolute left-0 top-0 w-72 h-full bg-white shadow-strong overflow-y-auto animate-slide-left">
             {/* Header */}
             <div className="h-16 flex items-center justify-between px-5 border-b border-surface-200">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-brand-600 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <span className="font-bold text-surface-900">StitchHub</span>
+              <div className="flex items-center">
+                <img 
+                  src="/logo&name.jpeg" 
+                  alt="RKV TEX Logo" 
+                  className="h-8 w-auto object-contain"
+                />
               </div>
               <button
                 onClick={() => setMobileOpen(false)}

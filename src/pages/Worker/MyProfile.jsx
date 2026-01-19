@@ -221,7 +221,7 @@ const MyProfile = () => {
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="btn-primary">
+              <button type="submit" className="modal-btn-submit">
                 Save Changes
               </button>
               <button
@@ -230,7 +230,7 @@ const MyProfile = () => {
                   setIsEditing(false);
                   setEditData({ name: profileData.name, email: profileData.email });
                 }}
-                className="btn-outline"
+                className="modal-btn-cancel"
               >
                 Cancel
               </button>
@@ -292,7 +292,7 @@ const MyProfile = () => {
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="btn-primary">
+              <button type="submit" className="modal-btn-submit">
                 Change Password
               </button>
               <button
@@ -301,7 +301,7 @@ const MyProfile = () => {
                   setIsChangingPassword(false);
                   setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                 }}
-                className="btn-outline"
+                className="modal-btn-cancel"
               >
                 Cancel
               </button>

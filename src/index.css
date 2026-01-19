@@ -637,10 +637,88 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
     border-top: 1px solid #e4e4e7;
     background-color: #fafafa;
+  }
+
+  /* Modal Button Styles */
+  .modal-btn-cancel {
+    padding: 0.625rem 1.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #52525b;
+    background-color: white;
+    border: 1.5px solid #d4d4d8;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .modal-btn-cancel:hover {
+    background-color: #f4f4f5;
+    border-color: #a1a1aa;
+    color: #18181b;
+  }
+
+  .modal-btn-cancel:active {
+    background-color: #e4e4e7;
+    transform: scale(0.98);
+  }
+
+  .modal-btn-submit {
+    padding: 0.625rem 1.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 150ms ease;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  }
+
+  .modal-btn-submit:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    box-shadow: 0 4px 6px -1px rgb(2 132 199 / 0.3);
+    transform: translateY(-1px);
+  }
+
+  .modal-btn-submit:active {
+    background: linear-gradient(135deg, #075985 0%, #0c4a6e 100%);
+    transform: translateY(0);
+  }
+
+  .modal-btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .modal-btn-danger {
+    padding: 0.625rem 1.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 150ms ease;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  }
+
+  .modal-btn-danger:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    box-shadow: 0 4px 6px -1px rgb(220 38 38 / 0.3);
+    transform: translateY(-1px);
+  }
+
+  .modal-btn-danger:active {
+    background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+    transform: translateY(0);
   }
 
   /* ========================================

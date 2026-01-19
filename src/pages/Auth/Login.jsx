@@ -76,12 +76,13 @@ const Login = () => {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-2xl mb-4 shadow-lg shadow-brand-600/50">
-            <svg className="w-9 h-9 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src="/logo&name.jpeg" 
+              alt="RKV TEX Logo" 
+              className="h-20 w-auto object-contain"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">StitchHub</h1>
           <p className="text-blue-200/80 text-sm">Workforce Management System</p>
         </div>
 
