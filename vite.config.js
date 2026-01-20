@@ -10,27 +10,32 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.jpeg', 'logo&name.jpeg'],
       manifest: {
-        name: 'RKV TEX - Workforce Management',
+        name: 'RKV TEX - Workforce Management System',
         short_name: 'RKV TEX',
-        description: 'Workforce Management System for RKV TEX',
+        description: 'Workforce Management System for RKV TEX - Manage workers, attendance, finances, and exports',
         theme_color: '#0284c7',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+        categories: ['business', 'productivity'],
         icons: [
           {
             src: '/logo.jpeg',
             sizes: '192x192',
-            type: 'image/jpeg',
-            purpose: 'any maskable'
+            type: 'image/jpeg'
           },
           {
             src: '/logo.jpeg',
             sizes: '512x512',
+            type: 'image/jpeg'
+          },
+          {
+            src: '/logo&name.jpeg',
+            sizes: '512x512',
             type: 'image/jpeg',
-            purpose: 'any maskable'
+            purpose: 'any'
           }
         ]
       },
