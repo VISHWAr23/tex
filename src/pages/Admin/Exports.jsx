@@ -102,6 +102,19 @@ const Exports = () => {
     }
   };
 
+  const handlePaymentStatusToggle = async (exportItem) => {
+    try {
+      const updatedStatus = !exportItem.paymentReceived;
+      await updateExport(exportItem.id, { paymentReceived: updatedStatus });
+      setSuccess(`Payment marked as ${updatedStatus ? 'received' : 'pending'}`);
+      fetchData();
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      setError(err.message || 'Failed to update payment status');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
   const filteredDescriptions = useMemo(() => {
     if (!descriptionSearch.trim()) return descriptions;
     const search = descriptionSearch.toLowerCase();
@@ -273,21 +286,40 @@ const Exports = () => {
 
       {/* Statistics */}
       {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="stat-card">
             <p className="stat-label">Total Revenue</p>
             <p className="stat-value text-brand-600">{formatCurrency(statistics.summary.totalRevenue)}</p>
             <p className="text-sm text-surface-500 mt-1">{statistics.summary.totalExports} exports</p>
           </div>
           <div className="stat-card">
-            <p className="stat-label">Total Quantity</p>
-            <p className="stat-value text-accent-emerald">{statistics.summary.totalQuantity.toLocaleString()}</p>
-            <p className="text-sm text-surface-500 mt-1">Units exported</p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-accent-emerald rounded-full"></div>
+              <p className="stat-label">Payment Received</p>
+            </div>
+            <p className="stat-value text-accent-emerald">
+              {formatCurrency(exports.filter(e => e.paymentReceived).reduce((sum, e) => sum + e.totalAmount, 0))}
+            </p>
+            <p className="text-sm text-surface-500 mt-1">
+              {exports.filter(e => e.paymentReceived).length} paid
+            </p>
           </div>
           <div className="stat-card">
-            <p className="stat-label">Average Price</p>
-            <p className="stat-value text-accent-violet">{formatCurrency(statistics.summary.averagePrice)}</p>
-            <p className="text-sm text-surface-500 mt-1">Per unit</p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-accent-amber rounded-full"></div>
+              <p className="stat-label">Payment Pending</p>
+            </div>
+            <p className="stat-value text-accent-amber">
+              {formatCurrency(exports.filter(e => !e.paymentReceived).reduce((sum, e) => sum + e.totalAmount, 0))}
+            </p>
+            <p className="text-sm text-surface-500 mt-1">
+              {exports.filter(e => !e.paymentReceived).length} pending
+            </p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-label">Total Quantity</p>
+            <p className="stat-value text-accent-violet">{statistics.summary.totalQuantity.toLocaleString()}</p>
+            <p className="text-sm text-surface-500 mt-1">Units exported</p>
           </div>
         </div>
       )}
@@ -365,6 +397,7 @@ const Exports = () => {
           <table className="table">
             <thead>
               <tr>
+                <th>Payment</th>
                 <th>Date</th>
                 <th>Company</th>
                 <th>Description</th>
@@ -376,7 +409,24 @@ const Exports = () => {
             </thead>
             <tbody>
               {exports.map((exportItem) => (
-                <tr key={exportItem.id}>
+                <tr key={exportItem.id} className={exportItem.paymentReceived ? 'bg-emerald-50/30' : ''}>
+                  <td>
+                    <label className="flex items-center cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={exportItem.paymentReceived || false}
+                        onChange={() => handlePaymentStatusToggle(exportItem)}
+                        className="w-5 h-5 rounded border-2 border-surface-300 text-accent-emerald focus:ring-2 focus:ring-accent-emerald focus:ring-offset-0 cursor-pointer transition-all"
+                      />
+                      <span className="ml-2 text-xs font-medium">
+                        {exportItem.paymentReceived ? (
+                          <span className="text-accent-emerald">Paid</span>
+                        ) : (
+                          <span className="text-accent-amber">Pending</span>
+                        )}
+                      </span>
+                    </label>
+                  </td>
                   <td className="font-medium text-surface-900">{formatDate(exportItem.date)}</td>
                   <td>
                     <span className="font-medium text-surface-900">{exportItem.company?.name}</span>
@@ -387,7 +437,11 @@ const Exports = () => {
                   </td>
                   <td>{formatCurrency(exportItem.pricePerUnit)}</td>
                   <td>
-                    <span className="font-semibold text-brand-600">{formatCurrency(exportItem.totalAmount)}</span>
+                    <span className={`font-semibold ${
+                      exportItem.paymentReceived ? 'text-accent-emerald' : 'text-accent-amber'
+                    }`}>
+                      {formatCurrency(exportItem.totalAmount)}
+                    </span>
                   </td>
                   <td>
                     <div className="flex items-center gap-2">
