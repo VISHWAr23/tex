@@ -205,7 +205,7 @@ export default function Finance() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-surface-400 text-sm font-medium">Total Expenses</p>
-                <p className="text-2xl font-bold text-white mt-1">{formatCurrency(statistics.total || 0)}</p>
+                <p className="text-2xl font-bold text-white mt-1">{formatCurrency(statistics.summary?.totalAmount || statistics.total || 0)}</p>
               </div>
               <div className="w-12 h-12 bg-brand-600 flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,7 +219,7 @@ export default function Finance() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-surface-400 text-sm font-medium">Total Records</p>
-                <p className="text-2xl font-bold text-white mt-1">{statistics.count || 0}</p>
+                <p className="text-2xl font-bold text-white mt-1">{statistics.summary?.totalRecords || statistics.count || 0}</p>
               </div>
               <div className="w-12 h-12 bg-accent-emerald flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ export default function Finance() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-surface-400 text-sm font-medium">Categories Used</p>
-                <p className="text-2xl font-bold text-white mt-1">{categories.length || 0}</p>
+                <p className="text-2xl font-bold text-white mt-1">{statistics.byCategory?.length || categories.length || 0}</p>
               </div>
               <div className="w-12 h-12 bg-accent-amber flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -289,8 +289,8 @@ const Exports = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="stat-card">
             <p className="stat-label">Total Revenue</p>
-            <p className="stat-value text-brand-600">{formatCurrency(statistics.summary.totalRevenue)}</p>
-            <p className="text-sm text-surface-500 mt-1">{statistics.summary.totalExports} exports</p>
+            <p className="stat-value text-brand-600">{formatCurrency(statistics.summary?.totalRevenue || 0)}</p>
+            <p className="text-sm text-surface-500 mt-1">{statistics.summary?.totalExports || 0} exports</p>
           </div>
           <div className="stat-card">
             <div className="flex items-center gap-2 mb-2">
@@ -298,7 +298,7 @@ const Exports = () => {
               <p className="stat-label">Payment Received</p>
             </div>
             <p className="stat-value text-accent-emerald">
-              {formatCurrency(exports.filter(e => e.paymentReceived).reduce((sum, e) => sum + e.totalAmount, 0))}
+              {formatCurrency(exports.filter(e => e.paymentReceived).reduce((sum, e) => sum + (Number(e.totalAmount) || 0), 0))}
             </p>
             <p className="text-sm text-surface-500 mt-1">
               {exports.filter(e => e.paymentReceived).length} paid
@@ -310,7 +310,7 @@ const Exports = () => {
               <p className="stat-label">Payment Pending</p>
             </div>
             <p className="stat-value text-accent-amber">
-              {formatCurrency(exports.filter(e => !e.paymentReceived).reduce((sum, e) => sum + e.totalAmount, 0))}
+              {formatCurrency(exports.filter(e => !e.paymentReceived).reduce((sum, e) => sum + (Number(e.totalAmount) || 0), 0))}
             </p>
             <p className="text-sm text-surface-500 mt-1">
               {exports.filter(e => !e.paymentReceived).length} pending
@@ -318,7 +318,7 @@ const Exports = () => {
           </div>
           <div className="stat-card">
             <p className="stat-label">Total Quantity</p>
-            <p className="stat-value text-accent-violet">{statistics.summary.totalQuantity.toLocaleString()}</p>
+            <p className="stat-value text-accent-violet">{(statistics.summary?.totalQuantity || 0).toLocaleString()}</p>
             <p className="text-sm text-surface-500 mt-1">Units exported</p>
           </div>
         </div>

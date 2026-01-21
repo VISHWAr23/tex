@@ -36,36 +36,98 @@ const FinancialAnalytics = () => {
         getFinancialOverview(dateRange.startDate, dateRange.endDate).catch(e => { console.error('Overview error:', e); return {}; }),
         getSalaryAnalytics(dateRange.startDate, dateRange.endDate).catch(e => { console.error('Salary error:', e); return {}; }),
         getRevenueAnalytics(dateRange.startDate, dateRange.endDate).catch(e => { console.error('Revenue error:', e); return {}; }),
-        getWorkerProductivity(dateRange.startDate, dateRange.endDate).catch(e => { console.error('Productivity error:', e); return []; }),
+        getWorkerProductivity(dateRange.startDate, dateRange.endDate).catch(e => { console.error('Productivity error:', e); return {}; }),
         getProfitMarginAnalysis(dateRange.startDate, dateRange.endDate).catch(e => { console.error('Profit error:', e); return {}; }),
       ]);
 
-      console.log('Analytics API Responses:');
-      console.log('Overview:', overviewRes);
-      console.log('Salary:', salaryRes);
-      console.log('Revenue:', revenueRes);
-      console.log('Productivity:', productivityRes);
-      console.log('Profit:', profitRes);
+      // Handle API responses - properly access the data from each response
+      // Financial Overview has: revenue, expenses, profit, profitMargin, roi, ratios, kpis
+      const overview = overviewRes || {};
+      setFinancialOverview({
+        revenue: {
+          total: overview.revenue?.total || overview.revenue?.exports || 0,
+          count: overview.kpis?.avgDailyOutput || 0,
+          average: overview.kpis?.revenuePerWorker || 0,
+        },
+        expenses: {
+          total: overview.expenses?.total || 0,
+          workPayments: overview.expenses?.salary || 0,
+          business: overview.expenses?.operating || 0,
+          home: overview.expenses?.home || 0,
+        },
+        profit: {
+          gross: overview.profit?.gross || 0,
+          operating: overview.profit?.operating || 0,
+          net: overview.profit?.net || 0,
+        },
+        profitMargin: overview.profitMargin || 0,
+      });
+      
+      // Salary Analytics has: total { earned, paid, amount, workers }, average, workerBreakdown
+      const salary = salaryRes || {};
+      setSalaryAnalytics({
+        total: {
+          amount: salary.total?.earned || salary.total?.amount || 0,
+          count: salary.total?.workers || 0,
+        },
+        average: {
+          amount: salary.average?.perWorker || salary.average?.earnedPerWorker || 0,
+        },
+        workerBreakdown: (salary.workerBreakdown || []).map(w => ({
+          workerId: w.id,
+          workerName: w.name,
+          count: w.workDays || 0,
+          totalAmount: w.totalEarned || w.totalSalary || 0,
+          avgAmount: w.avgPerDay || 0,
+          totalQuantity: w.totalQuantity || 0,
+        })),
+      });
+      
+      // Revenue Analytics has: total { amount, quantity, exports, companies }, average, companyBreakdown
+      const revenue = revenueRes || {};
+      setRevenueAnalytics({
+        total: {
+          amount: revenue.total?.amount || 0,
+          count: revenue.total?.exports || 0,
+        },
+        average: {
+          amount: revenue.average?.revenuePerExport || 0,
+        },
+        companyBreakdown: (revenue.companyBreakdown || []).map(c => ({
+          companyId: c.id,
+          companyName: c.name,
+          count: c.exportCount || 0,
+          totalItems: c.totalQuantity || 0,
+          totalAmount: c.totalRevenue || 0,
+          avgAmount: c.exportCount ? (c.totalRevenue / c.exportCount) : 0,
+        })),
+      });
+      
+      // Worker Productivity has: total { output, workers }, average, topPerformers
+      const productivity = productivityRes || {};
+      const topPerformers = productivity.topPerformers || [];
+      setProductivityData(topPerformers.map(w => ({
+        workerId: w.id,
+        workerName: w.name,
+        workCount: w.workDays || 0,
+        totalQuantity: w.totalOutput || 0,
+        totalAmount: w.totalEarnings || 0,
+        avgAmount: w.workDays ? (w.totalEarnings / w.workDays) : 0,
+        productivity: w.productivity || 0,
+        efficiency: w.efficiency || 0,
+      })));
+      
+      // Profit Margin has: gross { amount, margin }, operating { amount, margin }, net { amount, margin }
+      const profit = profitRes || {};
+      setProfitMarginData({
+        gross: profit.gross?.margin || 0,
+        operating: profit.operating?.margin || 0,
+        net: profit.net?.margin || 0,
+      });
 
-      // Handle nested data structures - check if response has a 'data' property
-      const overview = overviewRes?.data || overviewRes || {};
-      const salary = salaryRes?.data || salaryRes || {};
-      const revenue = revenueRes?.data || revenueRes || {};
-      const productivity = productivityRes?.data || productivityRes || [];
-      const profit = profitRes?.data || profitRes || {};
-
-      setFinancialOverview(overview);
-      setSalaryAnalytics(salary);
-      setRevenueAnalytics(revenue);
-      setProductivityData(Array.isArray(productivity) ? productivity : []);
-      setProfitMarginData(profit);
-
-      console.log('Set states:', { overview, salary, revenue, productivity, profit });
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
-      console.error('Error details:', err.response?.data || err.message);
       setError('Failed to load analytics data. Please try again.');
-      // Set default values even on error
       setFinancialOverview({});
       setSalaryAnalytics({});
       setRevenueAnalytics({});
@@ -247,33 +309,25 @@ const FinancialAnalytics = () => {
                 <div className="p-4 bg-surface-50 border border-surface-200">
                   <p className="text-sm text-surface-500">Gross Margin</p>
                   <p className="text-2xl font-bold text-surface-900">
-                    {typeof profitMarginData.gross === 'number' 
-                      ? profitMarginData.gross.toFixed(1) 
-                      : (profitMarginData.gross?.percentage || profitMarginData.gross?.value || 0).toFixed?.(1) || '0.0'}%
+                    {(Number(profitMarginData.gross) || 0).toFixed(1)}%
                   </p>
                 </div>
                 <div className="p-4 bg-surface-50 border border-surface-200">
                   <p className="text-sm text-surface-500">Operating Margin</p>
                   <p className="text-2xl font-bold text-surface-900">
-                    {typeof profitMarginData.operating === 'number'
-                      ? profitMarginData.operating.toFixed(1)
-                      : (profitMarginData.operating?.percentage || profitMarginData.operating?.value || 0).toFixed?.(1) || '0.0'}%
+                    {(Number(profitMarginData.operating) || 0).toFixed(1)}%
                   </p>
                 </div>
                 <div className="p-4 bg-surface-50 border border-surface-200">
                   <p className="text-sm text-surface-500">Net Profit Margin</p>
                   <p
                     className={`text-2xl font-bold ${
-                      (typeof profitMarginData.net === 'number' 
-                        ? profitMarginData.net 
-                        : (profitMarginData.net?.percentage || profitMarginData.net?.value || 0)) >= 0 
+                      (Number(profitMarginData.net) || 0) >= 0 
                         ? 'text-accent-emerald' 
                         : 'text-accent-rose'
                     }`}
                   >
-                    {typeof profitMarginData.net === 'number'
-                      ? profitMarginData.net.toFixed(1)
-                      : (profitMarginData.net?.percentage || profitMarginData.net?.value || 0).toFixed?.(1) || '0.0'}%
+                    {(Number(profitMarginData.net) || 0).toFixed(1)}%
                   </p>
                 </div>
               </div>

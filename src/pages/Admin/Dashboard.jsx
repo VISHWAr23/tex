@@ -42,31 +42,49 @@ const Dashboard = () => {
         getAllExpenses(),
       ]);
 
-      const workerCount = usersRes.data?.byRole?.find(r => r.role === 'WORKER')?.count || 0;
+      // Get worker count from statistics response
+      const statsData = usersRes?.data || usersRes || {};
+      const byRole = statsData.byRole || [];
+      const workerCount = byRole.find(r => r.role === 'WORKER')?.count || 0;
       
+      // Get attendance data - properly access the response
+      const attendData = attendanceRes || {};
+      const todayPresentCount = attendData.summary?.present || 0;
+      
+      // Get today's work earnings
+      const todayWorkList = Array.isArray(todayWorkRes) ? todayWorkRes : [];
+      const todayEarningsSum = todayWorkList.reduce((sum, w) => sum + (Number(w.totalAmount) || 0), 0);
+      
+      // Get monthly earnings from statistics response
+      const monthStats = monthStatsRes || {};
+      const monthlyEarningsSum = monthStats.summary?.totalEarnings || 0;
+
       setStats({
         totalWorkers: workerCount,
-        todayPresent: attendanceRes?.summary?.present || 0,
-        todayEarnings: (todayWorkRes || []).reduce((sum, w) => sum + (w.totalAmount || 0), 0),
-        monthlyEarnings: monthStatsRes?.summary?.totalEarnings || 0,
+        todayPresent: todayPresentCount,
+        todayEarnings: todayEarningsSum,
+        monthlyEarnings: Number(monthlyEarningsSum) || 0,
       });
 
-      const exports = exportsRes?.data || [];
-      const expenses = expensesRes?.data || [];
+      // Process exports and expenses data
+      const exportsData = exportsRes?.data || exportsRes || [];
+      const exportsList = Array.isArray(exportsData) ? exportsData : [];
+      
+      const expensesData = expensesRes?.data || expensesRes || [];
+      const expensesList = Array.isArray(expensesData) ? expensesData : [];
 
-      const totalRevenue = exports.reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
-      const paidRevenue = exports
+      const totalRevenue = exportsList.reduce((sum, exp) => sum + (Number(exp.totalAmount) || 0), 0);
+      const paidRevenue = exportsList
         .filter(exp => exp.paymentReceived)
-        .reduce((sum, exp) => sum + (exp.totalAmount || 0), 0);
+        .reduce((sum, exp) => sum + (Number(exp.totalAmount) || 0), 0);
       const pendingRevenue = totalRevenue - paidRevenue;
 
-      const companyExpenses = expenses
+      const companyExpenses = expensesList
         .filter(exp => exp.type === 'COMPANY')
-        .reduce((sum, exp) => sum + (exp.amount || 0), 0);
-      const exportSentAmount = exports.reduce((sum, exp) => sum + (exp.amountSent || 0), 0);
-      const totalExpenses = companyExpenses + exportSentAmount;
+        .reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+      const totalExpenses = companyExpenses;
 
-      const netProfit = totalRevenue - totalExpenses;
+      const netProfit = totalRevenue - totalExpenses - Number(monthlyEarningsSum || 0);
 
       setFinancialData({
         totalRevenue,
@@ -76,8 +94,8 @@ const Dashboard = () => {
         netProfit,
       });
 
-      setTodayWork(todayWorkRes || []);
-      setTodayAttendance(attendanceRes);
+      setTodayWork(todayWorkList);
+      setTodayAttendance(attendData);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     } finally {

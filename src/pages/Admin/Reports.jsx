@@ -192,7 +192,7 @@ const Reports = () => {
       )}
 
       {/* Report Content */}
-      {reportType === 'summary' && workReport?.byWorker && (
+      {reportType === 'summary' && workReport?.workerBreakdown && (
         <div className="table-container">
           <div className="px-6 py-4 border-b border-surface-200">
             <h2 className="text-lg font-semibold text-surface-900">Worker Summary</h2>
@@ -200,7 +200,7 @@ const Reports = () => {
               {formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}
             </p>
           </div>
-          {workReport.byWorker.length > 0 ? (
+          {workReport.workerBreakdown.length > 0 ? (
             <table className="table">
               <thead>
                 <tr>
@@ -212,7 +212,7 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody>
-                {workReport.byWorker.map((item) => (
+                {workReport.workerBreakdown.map((item) => (
                   <tr key={item.userId}>
                     <td>
                       <div className="flex items-center gap-3">
@@ -223,14 +223,14 @@ const Reports = () => {
                       </div>
                     </td>
                     <td className="text-center">
-                      <span className="badge badge-neutral">{item.workDays}</span>
+                      <span className="badge badge-neutral">{item._count || item.workDays || 0}</span>
                     </td>
-                    <td className="text-center font-medium">{item.totalQuantity}</td>
+                    <td className="text-center font-medium">{item._sum?.quantity || item.totalQuantity || 0}</td>
                     <td className="text-right font-semibold text-accent-emerald">
-                      {formatCurrency(item.totalEarnings)}
+                      {formatCurrency(item._sum?.totalAmount || item.totalEarnings || 0)}
                     </td>
                     <td className="text-right text-surface-600">
-                      {formatCurrency(item.totalEarnings / (item.workDays || 1))}
+                      {formatCurrency((item._sum?.totalAmount || item.totalEarnings || 0) / (item._count || item.workDays || 1))}
                     </td>
                   </tr>
                 ))}
@@ -315,7 +315,7 @@ const Reports = () => {
         </div>
       )}
 
-      {reportType === 'detailed' && workReport?.byDate && (
+      {reportType === 'detailed' && workReport?.dailyBreakdown && (
         <div className="table-container">
           <div className="px-6 py-4 border-b border-surface-200">
             <h2 className="text-lg font-semibold text-surface-900">Detailed Daily Report</h2>
@@ -323,7 +323,7 @@ const Reports = () => {
               {formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}
             </p>
           </div>
-          {workReport.byDate && Object.keys(workReport.byDate).length > 0 ? (
+          {workReport.dailyBreakdown && workReport.dailyBreakdown.length > 0 ? (
             <table className="table">
               <thead>
                 <tr>
@@ -334,22 +334,22 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(workReport.byDate).map(([date, data]) => (
-                  <tr key={date}>
+                {workReport.dailyBreakdown.map((data) => (
+                  <tr key={data.date}>
                     <td>
                       <div>
-                        <span className="font-medium text-surface-900">{formatDate(date)}</span>
+                        <span className="font-medium text-surface-900">{formatDate(data.date)}</span>
                         <p className="text-xs text-surface-500">
-                          {new Date(date).toLocaleDateString('en-IN', { weekday: 'long' })}
+                          {new Date(data.date).toLocaleDateString('en-IN', { weekday: 'long' })}
                         </p>
                       </div>
                     </td>
                     <td className="text-center">
-                      <span className="badge badge-neutral">{data.count}</span>
+                      <span className="badge badge-neutral">{data._count || 0}</span>
                     </td>
-                    <td className="text-center font-medium">{data.totalQuantity}</td>
+                    <td className="text-center font-medium">{data._sum?.quantity || 0}</td>
                     <td className="text-right font-semibold text-accent-emerald">
-                      {formatCurrency(data.totalEarnings)}
+                      {formatCurrency(data._sum?.totalAmount || 0)}
                     </td>
                   </tr>
                 ))}
