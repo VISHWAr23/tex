@@ -1056,10 +1056,21 @@
 
   /* Fix tabs for mobile */
   .tab-button {
-    padding: 0.625rem 1rem;
-    font-size: 0.8125rem;
-    flex: 1;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
     text-align: center;
+    min-width: auto;
+  }
+  
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   /* Fix form groups for mobile */

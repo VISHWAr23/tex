@@ -253,16 +253,18 @@ const FinancialAnalytics = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-surface-200 overflow-x-auto bg-white">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`tab-button ${activeTab === tab.id ? 'tab-button-active' : ''}`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="bg-white border-b border-surface-200">
+        <div className="flex overflow-x-auto scrollbar-hide">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`tab-button whitespace-nowrap flex-shrink-0 ${activeTab === tab.id ? 'tab-button-active' : ''}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}
