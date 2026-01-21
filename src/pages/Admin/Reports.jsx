@@ -107,11 +107,11 @@ const Reports = () => {
           <h1 className="page-title">Reports & Analytics</h1>
           <p className="page-subtitle">Comprehensive reports for work and attendance</p>
         </div>
-        <button onClick={exportToCSV} className="btn-success">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <button onClick={exportToCSV} className="action-button">
+          <svg className="action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Export CSV
+          <span>Export CSV</span>
         </button>
       </div>
 

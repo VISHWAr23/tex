@@ -152,25 +152,27 @@ const WorkerDetail = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/workers')} className="btn-ghost">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/workers')} className="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+            <svg className="w-5 h-5 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back
           </button>
+          <span className="text-sm text-surface-500">Back to Workers</span>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="page-header">
             <h1 className="page-title">{workerDetails.name}</h1>
             <p className="page-subtitle">{workerDetails.email}</p>
           </div>
+          <button onClick={handleOpenPaymentModal} className="action-button">
+            <svg className="action-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Record Payment</span>
+          </button>
         </div>
-        <button onClick={handleOpenPaymentModal} className="btn-primary">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-          </svg>
-          Record Payment
-        </button>
       </div>
 
       {/* Messages */}
