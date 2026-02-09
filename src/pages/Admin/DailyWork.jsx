@@ -499,15 +499,15 @@ const DailyWork = () => {
                         <div
                           key={desc.id}
                           onClick={() => handleDescriptionSelect(desc)}
-                          className="px-4 py-3 cursor-pointer flex justify-between items-center hover:bg-surface-50 transition border-b border-surface-100 last:border-b-0"
+                          className="px-4 py-3 cursor-pointer flex justify-between items-start gap-2 hover:bg-surface-50 transition border-b border-surface-100 last:border-b-0"
                         >
-                          <p className="text-sm text-surface-800 font-medium truncate">{desc.text}</p>
+                          <p className="text-sm text-surface-800 font-medium break-words flex-1">{desc.text}</p>
                           {desc.pricePerUnit ? (
-                            <span className="text-sm font-semibold text-brand-600 whitespace-nowrap ml-2">
+                            <span className="text-sm font-semibold text-brand-600 whitespace-nowrap">
                               ₹{desc.pricePerUnit.toFixed(2)}
                             </span>
                           ) : (
-                            <span className="text-xs text-surface-400 whitespace-nowrap ml-2">No price</span>
+                            <span className="text-xs text-surface-400 whitespace-nowrap">No price</span>
                           )}
                         </div>
                       ))}
