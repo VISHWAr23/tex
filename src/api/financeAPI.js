@@ -96,6 +96,51 @@ export const getHomeCategories = async () => {
   return response.data;
 };
 
+// ============== HOME INCOME ==============
+
+/**
+ * Create a home income entry
+ */
+export const createHomeIncome = async (data) => {
+  const response = await axiosInstance.post('/finance/home-income', data);
+  return response.data;
+};
+
+/**
+ * Get all home income entries
+ */
+export const getHomeIncomes = async (startDate, endDate, category) => {
+  const params = new URLSearchParams();
+  if (startDate && startDate.trim()) params.append('startDate', startDate);
+  if (endDate && endDate.trim()) params.append('endDate', endDate);
+  if (category && category.trim()) params.append('category', category);
+
+  const queryString = params.toString();
+  const response = await axiosInstance.get(`/finance/home-income${queryString ? '?' + queryString : ''}`);
+  return response.data;
+};
+
+/**
+ * Get home income statistics
+ */
+export const getHomeIncomeStatistics = async (startDate, endDate) => {
+  const params = new URLSearchParams();
+  if (startDate && startDate.trim()) params.append('startDate', startDate);
+  if (endDate && endDate.trim()) params.append('endDate', endDate);
+
+  const queryString = params.toString();
+  const response = await axiosInstance.get(`/finance/home-income/statistics${queryString ? '?' + queryString : ''}`);
+  return response.data;
+};
+
+/**
+ * Get home income categories
+ */
+export const getHomeIncomeCategories = async () => {
+  const response = await axiosInstance.get('/finance/home-income/categories');
+  return response.data;
+};
+
 // ============== GENERAL ENDPOINTS ==============
 
 /**
